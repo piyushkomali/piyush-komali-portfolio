@@ -16,7 +16,7 @@ export function Navigation() {
 
   return (
     <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-fit hidden md:block">
-      <div className="bg-black/20 opacity-95 backdrop-blur-[4px] border border-white/10 rounded-[15px] px-6 py-2">
+      <div className="bg-black/20 opacity border border-white/10 rounded-[15px] px-6 py-2">
         <div className="flex items-center space-x-8">
           <Link href="/" className="text-lg font-bold text-white hover:text-red-400 transition-colors duration-200">
             PK
