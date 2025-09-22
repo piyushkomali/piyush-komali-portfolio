@@ -1,0 +1,60 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+## UI rules and conventions
+
+- Design system
+  - Use shadcn/ui components colocated in `components/ui/*`. Prefer composition over extending core primitives.
+  - Respect exported variants from `buttonVariants` and other CVA-based utilities. Extend via `className` only when variants are insufficient.
+  - Keep reusable layout wrappers as simple components (e.g., `Card`, `CardHeader`, `CardContent`, `CardFooter`).
+
+- Styling
+  - Tailwind CSS v4 is the styling layer. Prefer utility classes over custom CSS.
+  - Use the `cn` helper from `lib/utils.ts` to merge conditional classes.
+  - Theme tokens come from CSS variables set in `app/globals.css` (`--background`, `--foreground`, `--primary`, etc.). Do not hardcode colors; use semantic classes like `bg-card`, `text-muted-foreground`, `border-border`, `bg-primary`, `text-primary-foreground`.
+  - Border radius is controlled via `--radius` and derived tokens. Avoid inline pixel radii unless matching existing rounded sizes.
+  - Keep glass/blur effects subtle: prefer `/30`–`/70` opacities and `backdrop-blur-sm` where used in existing components.
+
+- Dark mode
+  - Dark variant is class-based using `next-themes`. Wrap app with `ThemeProvider` (already set up). Avoid direct media queries.
+  - Use semantic tokens that automatically adapt in dark mode; do not duplicate colors for `.dark` if a semantic token exists.
+
+- Typography
+  - Fonts are Geist Sans/Mono via Next fonts and wired through `font-sans`/`font-mono` variables. Apply on `body` only; avoid per-component font overrides.
+  - Headings: use Tailwind scales (`text-2xl`–`text-6xl`) consistent with `HeroSection`/section headings. Keep section titles bold.
+
+- Components
+  - Buttons: import from `components/ui/button` and use `variant` (`default`, `ghost`, `outline`, `secondary`, `destructive`, `link`) and `size` (`sm`, `default`, `lg`, `icon`). Use `asChild` for anchor buttons.
+  - Cards: import from `components/ui/card`; compose `CardHeader`, `CardContent`, `CardFooter`, `CardAction`, `CardTitle`, and `CardDescription` for structure.
+  - Icons: use `lucide-react`. Size via Tailwind (`h-4 w-4`, `h-5 w-5`) and avoid inline styles.
+
+- Layout
+  - Section shells: `section` elements use responsive padding similar to existing sections: `min-h-screen py-16 sm:py-20 px-4 sm:px-6 lg:px-8` and top padding to clear fixed nav.
+  - Constrain content with `max-w-6xl mx-auto` (or `max-w-4xl` for narrow layouts) to match current pages.
+  - Fixed navigation is present globally (`Navigation` and `MobileNavigation` from `layout.tsx`); avoid re-rendering nav inside individual pages beyond current usage.
+
+- Accessibility & interaction
+  - All interactive elements should be reachable with keyboard. Use shadcn primitives which include focus styles; ensure `focus-visible` rings are not suppressed.
+  - When wrapping `Link` with Button, prefer `asChild` to preserve semantics.
+  - External links must include `target="_blank"` and `rel="noopener noreferrer"` where applicable.
+
+- Animations
+  - Prefer Tailwind animation utilities defined in `app/globals.css` (e.g., `animate-fade-in-up`, `animate-spin-slow`). Keep durations <= 800ms unless necessary.
+  - Avoid heavy motion on first paint; follow `HeroSection` pattern of gating client-only effects behind a mounted state if needed.
+
+- Images & media
+  - Use `next/image` with explicit `width`/`height` or `fill` and appropriate `alt`. Apply rounded corners with existing radii conventions.
+  - For embedded previews (`iframe`), wrap with a bordered card-like container and provide an overlay to open in new tab, matching `ExperienceSection`.
+
+- File structure & imports
+  - Page-level sections live under `components/*-section.tsx`; pages under `app/*/page.tsx` import these sections.
+  - Keep UI primitives in `components/ui/*`. Do not place app-specific logic in `ui`.
+  - Use the defined path aliases from `components.json` (e.g., `@/components`, `@/lib/utils`).
+
+- Misc
+  - Use `Suspense` boundaries where data fetching or lazy components might be introduced; use simple fallbacks.
+  - Avoid inline hex colors in components; prefer semantic Tailwind tokens. If a one-off color is required, define or map it through CSS variables first.
+  - Keep strings and copy in sentence case, consistent with existing sections.

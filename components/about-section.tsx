@@ -42,28 +42,18 @@ export function AboutSection() {
               <div className="space-y-4 lg:space-y-6 text-base sm:text-lg leading-relaxed text-muted-foreground">
                 <p>
                   I am a Computer Science student at <strong className="text-foreground">Virginia Tech</strong> with a
-                  passion for building innovative software solutions. My interests span a broad spectrum of subjects,
-                  encompassing web development, full-stack engineering, data analytics, and human-computer interaction.
+                  passion for building innovative software solutions. I aim to pursue a career where I can bridge the thrill of technological challenges while seeing a tangible impact in making the world a better place.
                 </p>
 
                 <p>
-                  Since starting my journey in computer science, I've spent time working on algorithm competitions,
-                  hackathon projects, and real-world applications. In 2025, I gained valuable industry experience as a
-                  Software Engineer Intern at <strong className="text-foreground">Echio</strong>, where I implemented
-                  video streaming solutions and optimized web application performance.
+                  When making software I aim to create something that is not only technically relevant but also something that excites me and motivates me to keep learning and improving.
                 </p>
 
-                <p>
-                  Currently, I serve as a <strong className="text-foreground">Software Development Lead</strong> at
-                  VTHacks, architecting features for event applications used by 1000+ participants, and as a{" "}
-                  <strong className="text-foreground">Teaching Assistant</strong> in the CS Department, guiding 100+
-                  students in core computer science topics.
-                </p>
 
                 <p>
                   You can gain further insights into my background and interests through my{" "}
-                  <a href="#projects" className="text-primary hover:underline">
-                    projects
+                  <a href="/experience" className="text-primary hover:underline">
+                    experience
                   </a>
                   , find me on{" "}
                   <a

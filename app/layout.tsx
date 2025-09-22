@@ -11,9 +11,11 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   title: "Piyush Komali - Software Engineer",
+  icons: {
+    icon: "/images/piyush-komali.jpeg",
+  },
   description:
     "Computer Science student at Virginia Tech passionate about full-stack development and seeking internship opportunities.",
-  generator: "v0.app",
 }
 
 export default function RootLayout({
