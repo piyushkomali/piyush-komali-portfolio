@@ -1,12 +1,17 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
+import { Space_Grotesk } from "next/font/google"
 import { GeistMono } from "geist/font/mono"
+
+const spaceGrotesk = Space_Grotesk({ 
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-space-grotesk'
+})
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { Footer } from "@/components/footer"
 import {MobileNavigation} from "@/components/mobile-navigation"
-import {Navigation} from "@/components/navigation"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -25,8 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Navigation />
+      <body className={`font-sans ${spaceGrotesk.variable} ${GeistMono.variable}`}>
         <MobileNavigation />
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         <Footer />

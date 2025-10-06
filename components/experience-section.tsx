@@ -327,7 +327,7 @@ export function ExperienceSection() {
                               <div className="w-3 h-3 rounded-full bg-green-500/60"></div>
                             </div>
                             <div className="flex-1 mx-4">
-                              <div className="bg-muted/30 rounded px-3 py-1 text-xs text-muted-foreground text-center border border-pink-200/60">
+                              <div className="bg-muted/30 rounded px-3 py-1 text-xs text-muted-foreground text-center border">
                                 {currentItem.links.live}
                               </div>
                             </div>
@@ -366,7 +366,7 @@ export function ExperienceSection() {
                             <div className="w-3 h-3 rounded-full bg-green-500/60"></div>
                           </div>
                           <div className="flex-1 mx-4">
-                            <div className="bg-muted/30 rounded px-3 py-1 text-xs text-muted-foreground text-center border border-pink-200/60">
+                            <div className="bg-muted/30 rounded px-3 py-1 text-xs text-muted-foreground text-center border">
                               https://ufa-project.onrender.com
                             </div>
                           </div>
@@ -405,7 +405,7 @@ export function ExperienceSection() {
                             <div className="w-3 h-3 rounded-full bg-green-500/60"></div>
                           </div>
                           <div className="flex-1 mx-4">
-                            <div className="bg-muted/30 rounded px-3 py-1 text-xs text-muted-foreground text-center border border-pink-200/60">
+                            <div className="bg-muted/30 rounded px-3 py-1 text-xs text-muted-foreground text-center border">
                               https://ultimate-db.vercel.app
                             </div>
                           </div>
@@ -446,7 +446,7 @@ export function ExperienceSection() {
                               <div className="w-3 h-3 rounded-full bg-green-500/60"></div>
                             </div>
                             <div className="flex-1 mx-4">
-                              <div className="bg-muted/30 rounded px-3 py-1 text-xs text-muted-foreground text-center border border-pink-200/60">
+                              <div className="bg-muted/30 rounded px-3 py-1 text-xs text-muted-foreground text-center border">
                                 {currentItem.links.live}
                               </div>
                             </div>

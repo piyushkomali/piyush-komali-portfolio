@@ -1,4 +1,3 @@
-import { Navigation } from "@/components/navigation"
 import { MobileNavigation } from "@/components/mobile-navigation"
 import { HeroSection } from "@/components/hero-section"
 

@@ -16,9 +16,9 @@ export function Navigation() {
 
   return (
     <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-fit hidden md:block">
-      <div className="bg-black/20 opacity border border-white/10 rounded-[15px] px-6 py-2">
+      <div className="bg-black/20 opacity border border-white/10 rounded-[9px] px-6 py-2">
         <div className="flex items-center space-x-8">
-          <Link href="/" className="text-lg font-bold text-white hover:text-red-400 transition-colors duration-200">
+          <Link href="/" className="text-lg font-bold text-white hover:text-white/40 transition-colors duration-200">
             PK
           </Link>
 
@@ -28,9 +28,9 @@ export function Navigation() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "text-sm font-medium transition-colors duration-200 px-3 py-1 rounded-full",
+                  "text-sm font-medium transition-colors duration-200 px-3 py-1 rounded-[9px]",
                   pathname === item.href
-                    ? "text-white bg-[#e7576d]"
+                    ? "text-white bg-white/10"
                     : "text-white/90 hover:text-white hover:bg-white/10 hover:shadow-white/10",
                 )}
               >
