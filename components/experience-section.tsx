@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ExternalLink, Github, Calendar, MapPin } from "lucide-react"
@@ -15,9 +15,9 @@ const workExperience = [
     location: "Remote",
     period: "May 2025 - August 2025",
     description: [
-      "Implemented in-house video streaming support for HLS and Adaptive Bitrate Streaming (ABS) with Next.js in client-side, improving UX and decreasing load times by 65%",
-      "Initiated a white-label solution across agency domains by implementing a custom Express API for theming using Material UI, enabling customization for agency portfolio",
-      "Optimized core API fetching from Client-Side Rendering (CSR) to Server-Side Rendering (SSR) using Next.js Server Components reducing page load times by 35%",
+      "Implemented in-house video streaming support for HLS and Adaptive Bitrate Streaming(ABS) with Next.js in client-side, improving UX and decreasing load times by 65%",
+      "Initiated a white-label solution across agency domains by implementing a custom Express API for themeing using Material UI, enabling customization for agency portfolio",
+      "Optimized core API fetching from Client-Side Rendering(CSR) to Server-Side Rendering(SSR) using Next.js Server Components reducing page load times by 35%",
       "Built an ETL Pipeline in Python to clean and migrate 700,000+ influencers from MongoDB, delivering a dashboard with detailed insights to stakeholders",
     ],
     technologies: ["Next.js", "Express.js", "Material UI", "Python", "MongoDB", "HLS", "SSR"],
@@ -29,23 +29,11 @@ const workExperience = [
     location: "Blacksburg, VA",
     period: "February 2025 – Present",
     description: [
-      "Architected development of 5+ features for VTHacks event application with Next.js, Shadcn, used by 1000+ participants for navigation, check-in, and sponsor engagement",
-      "Integrated Supabase Auth for user login and real-time event validation with PostgreSQL, improving data accuracy and sponsor retention by 30%",
-      "Migrated legacy backend from spreadsheets to a structured PostgreSQL database, improving internal admin efficiency by 50% and eliminating prior constraints",
+      "Led development of event application used by 1000+ participants, integrating features for navigation, check-in, and sponsor engagement with Next.js, Shadcn",
+      "Integrated Supabase Auth and designed relational SQL schemas to improve real-time event validation and data accuracy by 30%",
+      "Migrated legacy backend to structured PostgreSQL, applying principles of data modeling, reducing manual effort by 50%",
     ],
     technologies: ["Next.js", "Supabase", "PostgreSQL", "Shadcn", "TypeScript"],
-  },
-  {
-    id: "vt-cs",
-    company: "Virginia Tech - CS Department",
-    position: "Teaching Assistant",
-    location: "Blacksburg, VA",
-    period: "January 2025 – Present",
-    description: [
-      "Guided 100+ students in core CS topics such as Python, Git, containers, SQL, Web Dev, and LLM applications",
-      "Held weekly office hours and contributed to assignment reviews, grading, and feedback sessions under Prof.",
-    ],
-    technologies: ["Python", "Git", "SQL", "Docker", "Web Development", "LLM"],
   },
 ]
 
@@ -53,12 +41,12 @@ const projects = [
   {
     id: "jeart",
     title: "JEART Portfolio",
-    description: "Built a modern and reactive art portfolio using Shadcn for NBA Dunk Contest champion Jeremy Evans",
+    description: "Built a modern, responsive portfolio for NBA champion Jeremy Evans using Next.js, Shadcn, and Contentful",
     details: [
-      "Maintained scalability by integrating the Contentful CMS for content management, allowing ease of upload",
-      "Ensured type-safe content delivery with CMS-backed JSON schema validation and circular reference control",
+      "Deployed with AWS Amplify for scalable hosting and leveraged Cloudflare Workers for serverless edge functions enabling faster load times and API routing",
+      "Implemented type-safe content delivery with schema validation, supporting high availability and secure content management",
     ],
-    technologies: ["Next.js", "React.js", "Contentful CMS", "Shadcn", "TypeScript"],
+    technologies: ["Next.js", "Contentful CMS", "AWS Amplify", "Cloudflare Workers", "Shadcn"],
     links: {
       live: "https://jeremyevansart.com",
     },
@@ -67,12 +55,13 @@ const projects = [
     id: "ufa-stats",
     title: "UFA Stats Application",
     description:
-      "Developed and deployed a full-stack web app surfacing key Ultimate Frisbee Association (UFA) statistics used by 150+ fans decreasing lookup time by 35%",
+      "Developed and deployed a full-stack web app surfacing Ultimate Frisbee Association statistics, reducing lookup time by 35%",
     details: [
-      "Designed RESTful APIs using Flask, with robust CRUD support and JWT authentication stored in SQLite",
-      "Deployed frontend (React.js + Tailwind) on Vercel and hosted backend infrastructure using EC2 for high availability",
+      "Engineered REST APIs in Flask with CRUD operations, JWT authentication, and persistent storage in SQL databases",
+      "Integrated Agentic AI features using Cloudflare AutoRAG, enabling intelligent search for players/games and generating personalized statistic pages",
+      "Deployed backend on AWS EC2 with CI/CD pipelines; designed frontend data visualizations using React.js + Tailwind for 150+ active users",
     ],
-    technologies: ["Flask", "React.js", "Tailwind CSS", "SQLite", "JWT", "AWS EC2"],
+    technologies: ["Flask", "React.js", "AWS EC2", "SQL", "Cloudflare AutoRAG", "Tailwind CSS", "JWT"],
     links: {
       github: "https://github.com/piyushkomali/ufaproject",
     },
@@ -112,22 +101,6 @@ const projects = [
 export function ExperienceSection() {
   const [activeTab, setActiveTab] = useState<"experience" | "projects">("experience")
   const [selectedItem, setSelectedItem] = useState<string>(workExperience[0].id)
-  const [alternatingText, setAlternatingText] = useState("Nizamani")
-  const [isAnimating, setIsAnimating] = useState(false)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsAnimating(true)
-      setTimeout(() => {
-        setAlternatingText((prev) => (prev === "Nizamani" ? "Sullivan" : "Nizamani"))
-        setTimeout(() => {
-          setIsAnimating(false)
-        }, 50)
-      }, 450)
-    }, 3500)
-
-    return () => clearInterval(interval)
-  }, [])
 
   const currentData = activeTab === "experience" ? workExperience : projects
   const currentItem = currentData.find((item) => item.id === selectedItem) || currentData[0]
@@ -255,38 +228,12 @@ export function ExperienceSection() {
 
                   {/* Description */}
                   <div className="space-y-4">
-                    {"description" in currentItem && activeTab === "experience" && (
+                    {"description" in currentItem && activeTab === "experience" && Array.isArray(currentItem.description) && (
                       <ul className="space-y-3">
-                        {currentItem.description.map((item, index) => (
+                        {(currentItem.description as string[]).map((item: string, index: number) => (
                           <li key={index} className="flex items-start gap-3 text-muted-foreground leading-relaxed">
                             <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
-                            {currentItem.id === "vt-cs" && index === 1 ? (
-                              <span>
-                                {item}
-                                <span className="inline-block ml-2 relative overflow-hidden h-6 w-20 align-top">
-                                  <span
-                                    className={`absolute inset-0 transition-all duration-700 ease-out font-bold text-muted-foreground ${
-                                      isAnimating
-                                        ? "transform translate-y-full opacity-0"
-                                        : "transform translate-y-0 opacity-100"
-                                    }`}
-                                  >
-                                    {alternatingText}
-                                  </span>
-                                  <span
-                                    className={`absolute inset-0 transition-all duration-700 ease-out font-bold text-muted-foreground ${
-                                      isAnimating
-                                        ? "transform translate-y-0 opacity-100"
-                                        : "transform -translate-y-full opacity-0"
-                                    }`}
-                                  >
-                                    {alternatingText === "Nizamani" ? "Sullivan" : "Nizamani"}
-                                  </span>
-                                </span>
-                              </span>
-                            ) : (
-                              <span>{item}</span>
-                            )}
+                            <span>{item}</span>
                           </li>
                         ))}
                       </ul>
