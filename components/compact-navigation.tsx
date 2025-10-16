@@ -21,20 +21,20 @@ export function CompactNavigation() {
   const CurrentIcon = currentPage.icon
 
   return (
-     !isMobile ? <nav className="group relative ml-4">
+     !isMobile ? <nav className="group relative ml-4" style={{ fontFamily: '-apple-system, "system-ui", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"' }}>
       <div className={cn(
-        "bg-black/20 border border-white/20 px-3 py-2 cursor-pointer w-[225px] flex items-center justify-between gap-2 hover:bg-black/30 transition-colors",
+        "bg-[#1C1C1E] border border-white/10 rounded-[5px] px-4 py-2 cursor-pointer w-[225px] flex items-center justify-between gap-2 hover:bg-[#2C2C2E] transition-colors",
       )}>
         <div className="flex items-center justify-center gap-2 flex-1">
-          <CurrentIcon className="w-4 h-4 text-white" strokeWidth={2.5} />
-          <span className="text-sm font-semibold tracking-wide text-white">{currentPage.name}</span>
+          <CurrentIcon className="w-4 h-4 text-white" strokeWidth={2} />
+          <span className="text-[14px] font-normal leading-[21px] tracking-normal text-white">{currentPage.name}</span>
         </div>
-        <ChevronDown className="w-3.5 h-3.5 text-white/60 group-hover:text-white/90 transition-all group-hover:translate-y-0.5" strokeWidth={2.5} />
+        <ChevronDown className="w-4 h-4 text-white/70 group-hover:text-white transition-all group-hover:translate-y-0.5" strokeWidth={2} />
       </div>
       
       {/* Dropdown menu that expands from bottom */}
-      <div className="absolute top-full left-0 mt-1 bg-black/20 border border-white/20  px-3 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 origin-top transform scale-y-0 group-hover:scale-y-100 w-[225px] overflow-x-auto overflow-y-hidden scrollbar-hide z-50">
-        <div className="flex flex-col space-y-1 min-w-max">
+      <div className="absolute top-full left-0 mt-1 bg-[#1C1C1E] border border-white/10 rounded-[5px] px-2 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 origin-top transform scale-y-0 group-hover:scale-y-100 w-[225px] overflow-x-auto overflow-y-hidden scrollbar-hide z-50">
+        <div className="flex flex-col space-y-0.5 min-w-max">
           {navItems.slice(1).map((item) => {
             const Icon = item.icon
             return (
@@ -42,13 +42,13 @@ export function CompactNavigation() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "text-sm font-semibold tracking-wide transition-colors duration-200 px-2 py-1 rounded-[9px] whitespace-nowrap flex items-center gap-2",
+                  "text-[14px] font-normal leading-[21px] tracking-normal transition-colors duration-200 px-3 py-1.5 rounded-[5px] whitespace-nowrap flex items-center gap-2",
                   pathname === item.href
                     ? "text-white bg-white/10"
-                    : "text-white/90 hover:text-white hover:bg-white/10 hover:shadow-white/10",
+                    : "text-white/90 hover:text-white hover:bg-white/10",
                 )}
               >
-                <Icon className="w-4 h-4" strokeWidth={2.5} />
+                <Icon className="w-4 h-4" strokeWidth={2} />
                 {item.name}
               </Link>
             )
