@@ -9,6 +9,17 @@ import Image from "next/image"
 
 const workExperience = [
   {
+    id: "ibm-olabs",
+    company: "IBM oLabs",
+    position: "Incoming AI Engineer Intern",
+    location: "Reston, VA",
+    period: "Summer 2026",
+    description: [] as string[],
+    externalLink: "https://www.ibm.com/olabs",
+    linkLabel: "www.ibm.com/olabs",
+    technologies: [] as string[],
+  },
+  {
     id: "echio",
     company: "Echio",
     position: "Software Engineer Intern",
@@ -103,7 +114,10 @@ export function ExperienceSection() {
   const [selectedItem, setSelectedItem] = useState<string>(workExperience[0].id)
 
   const currentData = activeTab === "experience" ? workExperience : projects
-  const currentItem = currentData.find((item) => item.id === selectedItem) || currentData[0]
+  const currentItem =
+    activeTab === "experience"
+      ? workExperience.find((item) => item.id === selectedItem) ?? workExperience[0]
+      : projects.find((item) => item.id === selectedItem) ?? projects[0]
 
   return (
     <section id="experience" className="min-h-screen py-16 sm:py-20 px-4 sm:px-6 lg:px-8 pt-20 md:pt-20">
@@ -226,17 +240,35 @@ export function ExperienceSection() {
                     )}
                   </div>
 
-                  {/* Description */}
+                  {/* Description / link (work experience) or project copy */}
                   <div className="space-y-4">
                     {"description" in currentItem && activeTab === "experience" && Array.isArray(currentItem.description) && (
-                      <ul className="space-y-3">
-                        {(currentItem.description as string[]).map((item: string, index: number) => (
-                          <li key={index} className="flex items-start gap-3 text-muted-foreground leading-relaxed">
-                            <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <>
+                        {"externalLink" in currentItem && currentItem.externalLink ? (
+                          <p className="text-muted-foreground leading-relaxed">
+                            <a
+                              href={currentItem.externalLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-primary font-medium underline-offset-4 hover:underline"
+                            >
+                              <ExternalLink className="h-4 w-4 shrink-0" />
+                              {"linkLabel" in currentItem && currentItem.linkLabel
+                                ? currentItem.linkLabel
+                                : currentItem.externalLink.replace(/^https?:\/\//, "")}
+                            </a>
+                          </p>
+                        ) : currentItem.description.length > 0 ? (
+                          <ul className="space-y-3">
+                            {(currentItem.description as string[]).map((item: string, index: number) => (
+                              <li key={index} className="flex items-start gap-3 text-muted-foreground leading-relaxed">
+                                <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </>
                     )}
 
                     {"description" in currentItem && activeTab === "projects" && (
@@ -418,19 +450,21 @@ export function ExperienceSection() {
                     )}
 
                   {/* Technologies */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Technologies</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {currentItem.technologies.map((tech, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full border border-primary/20"
-                        >
-                          {tech}
-                        </span>
-                      ))}
+                  {currentItem.technologies.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Technologies</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {currentItem.technologies.map((tech, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full border border-primary/20"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </Card>
             </div>
