@@ -149,7 +149,7 @@ export function ExperienceSection() {
             </Button>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 items-start">
             {/* Left Column - List */}
             <div className="lg:space-y-2 flex lg:flex-col gap-2 lg:gap-0 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
               {currentData.map((item) => (
@@ -181,7 +181,7 @@ export function ExperienceSection() {
 
             {/* Right Column - Details */}
             <div className="lg:col-span-2">
-              <Card className="p-4 sm:p-6 lg:p-8 bg-card/50 backdrop-blur-sm border-border/50 h-full">
+              <Card className="p-4 sm:p-6 lg:p-8 bg-card/50 backdrop-blur-sm border-border/50 w-full">
                 <div className="space-y-4 lg:space-y-6">
                   {/* Header */}
                   <div className="space-y-3 lg:space-y-4">
