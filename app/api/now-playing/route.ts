@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server"
 
-const LASTFM_API_KEY = process.env.LASTFM_API_KEY
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
+
 const LASTFM_USERNAME = "piyushk12"
 
 export async function GET() {
+  const LASTFM_API_KEY = process.env.LASTFM_API_KEY
+
   if (!LASTFM_API_KEY) {
     return NextResponse.json({ error: "Missing API key" }, { status: 500 })
   }
 
   try {
     const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${LASTFM_USERNAME}&api_key=${LASTFM_API_KEY}&format=json&limit=1`
-    const res = await fetch(url, { next: { revalidate: 30 } })
+    const res = await fetch(url, { cache: "no-store" })
 
     if (!res.ok) {
       return NextResponse.json({ error: "Last.fm request failed" }, { status: res.status })
