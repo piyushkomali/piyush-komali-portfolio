@@ -15,6 +15,39 @@ export function HeroSection() {
 
   return (
     <section className="min-h-screen flex items-flex justify-center px-8 lg:ml-30 sm:px-12 lg:px-16 pt-16 md:pt-12">
+      {/* Contact links — top right */}
+      <div className="fixed top-6 right-8 z-40 hidden md:flex items-center gap-5">
+        <a
+          href="https://github.com/piyushkomali"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
+        >
+          github
+        </a>
+        <a
+          href="https://www.linkedin.com/in/piyush-komali-53bb09240"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
+        >
+          linkedin
+        </a>
+        <a
+          href="mailto:komali.piyush@gmail.com"
+          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
+        >
+          email
+        </a>
+        <a
+          href="/resume/Piyush_Komali_Resume.pdf"
+          download="Piyush_Komali_Resume.pdf"
+          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
+        >
+          resume
+        </a>
+      </div>
+
       <div className="max-w-2xl mx-auto w-full">
         {/* Left-aligned block-style content */}
         <div className="space-y-6 text-left">
