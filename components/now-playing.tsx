@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface Track {
   name: string
@@ -11,22 +11,75 @@ interface Track {
   isPlaying: boolean
 }
 
+const STORAGE_KEY = "lastfm-last-seen-track-v1"
+
 export function NowPlaying() {
   const [track, setTrack] = useState<Track | null>(null)
   const [loading, setLoading] = useState(true)
+  const lastSeenRef = useRef<Track | null>(null)
+
+  // Load any persisted "last seen" track on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as Track
+        lastSeenRef.current = parsed
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
 
   const fetchTrack = async () => {
     try {
-      const res = await fetch("/api/now-playing")
+      const res = await fetch(`/api/now-playing?t=${Date.now()}`, {
+        cache: "no-store",
+      })
       if (!res.ok) return
       const data = await res.json()
-      if (data.name) {
-        setTrack(data)
+
+      // Valid track payload
+      if (data && data.name) {
+        const incoming: Track = data
+
+        // Cache "now playing" tracks so we can show them after a pause/skip
+        if (incoming.isPlaying) {
+          lastSeenRef.current = incoming
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(incoming))
+          } catch {
+            // ignore
+          }
+          setTrack(incoming)
+          return
+        }
+
+        // Not playing → check if we have a more recent locally-cached track
+        // that we saw as "now playing" but Last.fm hasn't scrobbled yet
+        const cached = lastSeenRef.current
+        if (
+          cached &&
+          (cached.name !== incoming.name || cached.artist !== incoming.artist)
+        ) {
+          // Show our cached one as "last played" (it was the most recent thing
+          // we actually saw being played, even if Last.fm hasn't scrobbled it)
+          setTrack({ ...cached, isPlaying: false })
+          return
+        }
+
+        setTrack(incoming)
       } else {
-        setTrack(null)
+        // No track data at all — fall back to anything we have cached
+        const cached = lastSeenRef.current
+        if (cached) {
+          setTrack({ ...cached, isPlaying: false })
+        } else {
+          setTrack(null)
+        }
       }
     } catch {
-      setTrack(null)
+      // network error — keep showing whatever we had
     } finally {
       setLoading(false)
     }
@@ -34,7 +87,7 @@ export function NowPlaying() {
 
   useEffect(() => {
     fetchTrack()
-    const interval = setInterval(fetchTrack, 30000)
+    const interval = setInterval(fetchTrack, 15000)
     return () => clearInterval(interval)
   }, [])
 
