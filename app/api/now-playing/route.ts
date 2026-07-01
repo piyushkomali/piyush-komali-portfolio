@@ -17,7 +17,10 @@ export async function GET() {
     const res = await fetch(url, { cache: "no-store" })
 
     if (!res.ok) {
-      return NextResponse.json({ error: "Last.fm request failed" }, { status: res.status })
+      return NextResponse.json(
+        { error: "Last.fm request failed" },
+        { status: res.status }
+      )
     }
 
     const data = await res.json()
@@ -35,7 +38,9 @@ export async function GET() {
       artist: latest.artist?.["#text"] ?? "Unknown Artist",
       album: latest.album?.["#text"] ?? "",
       image:
-        latest.image?.find((img: { size: string; "#text": string }) => img.size === "large")?.["#text"] ??
+        latest.image?.find(
+          (img: { size: string; "#text": string }) => img.size === "large"
+        )?.["#text"] ??
         latest.image?.[2]?.["#text"] ??
         null,
       url: latest.url ?? null,

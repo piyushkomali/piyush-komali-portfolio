@@ -1,0 +1,171 @@
+---
+title: "Why MCP Switched from SSE to Streamable HTTP"
+description: "Server-Sent Events worked. Then the Model Context Protocol moved off it. A walk through the original transport, the four things that broke at scale, and why a single streamable HTTP endpoint is the right primitive."
+date: "2025-09-18"
+readingTime: "8 min"
+---
+
+A few weeks ago I was wiring up an MCP server and noticed the spec had quietly deprecated SSE in favor of something called **Streamable HTTP**. SSE worked. It had been the recommended transport since the protocol shipped. So I asked myself the obvious question:
+
+> Why did MCP switch off SSE?
+
+The answer turned out to be a pretty clean case study in protocol design — the kind of thing that looks like a small refactor on the surface and is actually a load-bearing decision underneath. This is the version of the story I wish someone had written for me before I started reading GitHub issues at 1 a.m.
+
+## What MCP is, in one paragraph
+
+The Model Context Protocol is Anthropic's open spec for letting an LLM talk to external tools, data sources, and runtimes through a uniform interface. A *client* (your model host — Claude Desktop, Cursor, an agent framework) speaks JSON-RPC to a *server* (a process exposing tools, resources, and prompts). The interesting question is never "what messages do they send" — JSON-RPC 2.0 settled that decades ago. The interesting question is always **how the bytes move**.
+
+## The original transport: HTTP + SSE
+
+The first remote transport MCP shipped was a two-endpoint design borrowed almost verbatim from how chat UIs stream tokens:
+
+- `GET /sse` — the client opens a long-lived **Server-Sent Events** stream. The server pushes notifications and responses down it forever.
+- `POST /messages` — the client sends every request as a separate HTTP POST. The response to that request is *not* returned in the POST — it comes back asynchronously over the SSE stream, correlated by JSON-RPC id.
+
+If you've ever built a chat app, this looks familiar. SSE is a beautifully simple primitive — it's literally `Content-Type: text/event-stream` over a plain HTTP/1.1 response that never closes. Browsers have supported it natively for over a decade.
+
+```ts title="client.ts (the old way)"
+// 1. open the event stream
+const es = new EventSource("/sse")
+es.onmessage = (e) => {
+  const msg = JSON.parse(e.data)
+  // ... route by msg.id back to the awaiting promise
+}
+
+// 2. send requests on a *different* connection
+await fetch("/messages", {
+  method: "POST",
+  body: JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/call",
+    params: { name: "search", arguments: { q: "mcp" } },
+  }),
+})
+// note: the response to id:1 will arrive on the SSE stream, not here
+```
+
+It works. It also has four problems that get progressively worse the second you try to deploy it for real.
+
+## Problem 1: stateful servers don't survive horizontal scale
+
+The SSE connection is the session. The server holds the open socket, an in-memory map of `{ requestId → pendingClient }`, plus whatever state your tools accumulate. That means:
+
+- You cannot put a load balancer in front of N replicas without sticky sessions, because the POST to `/messages` and the GET to `/sse` *must* hit the same process.
+- A rolling deploy drops every active session. You can't drain.
+- Restarting a single replica is a user-visible event.
+
+This is fine for one developer running `mcp-server-filesystem` on their laptop. It is genuinely painful the moment you try to run a fleet.
+
+## Problem 2: SSE is one-way, but agents need duplex
+
+SSE is, by design, server-to-client only. The client-to-server direction is bolted on as a separate POST endpoint. That's a small wart for a chat UI — the user types maybe once every few seconds. It's a real wart for agents, where the client and server are both constantly sending messages: tool calls, tool results, progress notifications, sampling requests, log entries, resource subscriptions.
+
+You end up with two transports glued together by a correlation id. Every request gets demultiplexed across two TCP connections. Every framework reimplements the same fragile id-tracking map. WebSockets would have solved this in one line, but WebSockets bring their own problems (proxies, auth headers, no native fetch APIs in older runtimes) — so SSE+POST was the compromise.
+
+The compromise had a cost.
+
+## Problem 3: reconnection is a lie
+
+SSE has a built-in reconnection model: `Last-Event-ID`. If the stream drops, the browser reopens it with that header and the server is supposed to replay everything after that id. In practice, almost no MCP server implemented replay correctly. If your network blipped mid-tool-call:
+
+- The SSE stream reconnects.
+- The POST that started the call has already returned 200.
+- The server's response to that call is gone, because it was buffered in the now-dead SSE stream's send queue.
+- The client waits forever on a promise that will never resolve.
+
+You can fix this with a replay buffer, but doing it well is hard, and *nobody was doing it well*.
+
+## Problem 4: infrastructure hates long-lived GETs
+
+Almost every layer of cloud infrastructure is hostile to long-lived idle connections:
+
+- AWS ALB idle timeout: 60s default
+- Cloudflare: 100s for free, configurable up to ~6000s
+- Vercel functions: 10–300s depending on plan
+- Most corporate proxies: aggressive
+
+To keep an SSE stream alive across these, you have to send keepalive comments every ~15s. Now your "elegant" transport is a constant trickle of `:ping\n\n` payloads, and you still get reaped on cold paths.
+
+Worse — serverless platforms (the place a lot of MCP servers naturally want to live) don't *have* a "long-lived process" abstraction at all. SSE-MCP fundamentally couldn't run on a stock Vercel or Cloudflare Worker without contortions.
+
+## The fix: Streamable HTTP
+
+The 2025-03-26 revision of the MCP spec replaced the two-endpoint SSE design with **one endpoint** that speaks plain HTTP, with optional streaming. The shape is roughly:
+
+- A single endpoint (conventionally `/mcp`).
+- Client sends requests as `POST /mcp` with a JSON-RPC body.
+- Server **chooses per-request** how to respond:
+  - `Content-Type: application/json` — a single response, like any boring REST API. Used when there's nothing to stream.
+  - `Content-Type: text/event-stream` — an SSE-formatted response *on the POST itself*, used when the server wants to stream progress notifications or sampling requests before the final result.
+- The client can also open `GET /mcp` to receive server-initiated notifications, but it's optional and the server can decline.
+- Sessions are tracked via a `Mcp-Session-Id` header the server hands out on initialization. The client echoes it on every subsequent request.
+
+```ts title="client.ts (streamable http)"
+const res = await fetch("/mcp", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json, text/event-stream",
+    "Mcp-Session-Id": sessionId,
+  },
+  body: JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/call",
+    params: { name: "search", arguments: { q: "mcp" } },
+  }),
+})
+
+if (res.headers.get("content-type")?.includes("text/event-stream")) {
+  // server is streaming — read SSE frames off this exact response
+  for await (const event of parseSSE(res.body!)) {
+    handle(JSON.parse(event.data))
+  }
+} else {
+  // single shot — just parse and return
+  handle(await res.json())
+}
+```
+
+Notice what this gives you for free.
+
+## Why this design is better
+
+**Statelessness is opt-in.** A trivial MCP server can be a pure request/response function. No background socket, no session map, no replay buffer. It runs on a Lambda. It runs on a Worker. It runs on `next dev`.
+
+```ts title="server.ts (a complete stateless MCP server)"
+export async function POST(req: Request) {
+  const message = await req.json()
+  const result = await handleJsonRpc(message)
+  return Response.json(result)
+}
+```
+
+That's the whole transport. No streaming, no sessions, no SSE. For a server that only exposes pure tools (`weather`, `calculator`, `search`), this is *all you need*. The previous spec forced every server to implement the full SSE machinery whether it needed it or not.
+
+**Streaming is opt-in, per request.** When a tool actually needs to stream — long-running operations, progress events, mid-call sampling — the server upgrades that specific response to `text/event-stream`. Everything else stays as cheap, cacheable, load-balancer-friendly JSON responses.
+
+**Reconnection is real.** Because the stream lives on the POST response, a dropped connection has obvious semantics: the request failed, retry it. The `Mcp-Session-Id` header makes idempotent retries safe. No more phantom requests stuck in a buffer somewhere.
+
+**Horizontal scale works.** Any replica can handle any request. Sticky sessions become an optimization, not a correctness requirement. Sessions are just a header — store them in Redis, or don't store them at all if your tools are stateless.
+
+**Auth fits.** SSE famously can't send custom headers from `EventSource` in the browser, which made bearer-token auth awkward. Streamable HTTP is just `fetch`. Bearer tokens, signed cookies, mTLS — all of it just works.
+
+## The cost: it's not as pretty
+
+Streamable HTTP is *less elegant* than SSE in isolation. You have to content-negotiate per response. You have to handle two response shapes on the client. You lose `EventSource`'s automatic reconnection and have to implement it yourself if you want long-lived server-push.
+
+But protocols don't get judged on elegance. They get judged on whether they survive contact with production. SSE-MCP failed that test in four specific places. Streamable HTTP fails in none of them.
+
+## The lesson, if there is one
+
+I keep coming back to a small observation: the original SSE design optimized for the simplest possible *server* implementation in the simplest possible *deployment*. One Python process on one laptop. That's a fine target — until your protocol succeeds and people start trying to deploy it.
+
+The Streamable HTTP rewrite optimizes for the opposite: the simplest possible deployment for the most common case (stateless tools), with a clean escape hatch (per-request SSE upgrade) for the cases that actually need streaming. Most servers don't.
+
+It's a protocol that admits the boring path is the common path. That's almost always the right call.
+
+---
+
+If you want to dig deeper, the official spec change lives in the [MCP 2025-03-26 revision](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports). The original version of this post ran on [Medium](https://medium.com/@komalipiyush/i-asked-myself-why-did-mcp-switch-from-sse-to-streamable-http-heres-why-b123683af2a1) — this version is rewritten from scratch for this site.
