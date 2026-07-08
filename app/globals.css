@@ -5,7 +5,7 @@
 
 :root {
   /* Black and white minimal theme */
-  --background: #191919; /* Pure black background */
+  --background: #14120c; /* Pure black background */
   --foreground: #ffffff; /* Pure white text */
   --card: #111111;
   --card-foreground: #ffffff;
@@ -42,7 +42,7 @@
 
 .dark {
   /* Dark theme - same as root since we're using black background globally */
-  --background: #000000;
+  --background: #14120c;
   --foreground: #ffffff;
   --card: #111111;
   --card-foreground: #ffffff;
@@ -127,6 +127,9 @@
 
   html {
     scroll-behavior: smooth;
+    /* Reserve space for the scrollbar so pages don't shift horizontally
+       when navigating between short and long pages */
+    scrollbar-gutter: stable;
   }
 
   button,
