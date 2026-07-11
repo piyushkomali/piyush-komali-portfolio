@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 import type { PostMeta, TocEntry } from "@/lib/posts"
 
 function formatDate(iso: string): string {
@@ -19,11 +20,12 @@ function Breadcrumb({ category }: { category: string }) {
     <div className="text-xs tracking-wide">
       <Link
         href="/posts"
-        className="text-gray-500 hover:text-gray-300 transition-colors"
+        className="transition-colors hover:text-gray-300"
+        style={{ color: "#92908e" }}
       >
         Blog
       </Link>
-      <span className="text-gray-600 mx-1.5">/</span>
+      <span className="mx-1.5" style={{ color: "#92908e" }}>/</span>
       <span className="text-white">{category}</span>
     </div>
   )
@@ -47,12 +49,10 @@ function TocList({
           >
             <a
               href={`#${entry.id}`}
-              className={[
-                "block leading-snug transition-colors",
-                isActive
-                  ? "text-white"
-                  : "text-gray-500 hover:text-gray-300",
-              ].join(" ")}
+              className="block leading-snug transition-colors"
+              style={{
+                color: isActive ? "#ffffff" : "#92908e",
+              }}
             >
               {entry.title}
             </a>
@@ -75,7 +75,12 @@ export function PostView({
   const [activeId, setActiveId] = useState<string | null>(
     toc[0]?.id ?? null,
   )
+  const [mounted, setMounted] = useState(false)
   const articleRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const ids = useMemo(() => toc.map((t) => t.id), [toc])
 
@@ -119,22 +124,40 @@ export function PostView({
 
   return (
     <div className="relative">
-      {/* Desktop TOC — placed to the left of the centered article column */}
-      <aside
-        aria-label="Table of contents"
-        className="hidden lg:block fixed top-40 z-10"
-        style={{ left: "max(1.5rem, calc(50% - 24rem - 12rem))", width: "10.5rem" }}
-      >
-        <div className="mb-5">
-          <Breadcrumb category={meta.category} />
-        </div>
-        <nav>
-          <TocList toc={toc} activeId={activeId} />
-        </nav>
-      </aside>
+      {/* Desktop TOC — portaled to <body> so it escapes any transformed
+          ancestor (SiteShell applies `-translate-x-*` which would otherwise
+          make `position: fixed` behave like `position: absolute` and cause
+          the TOC to scroll with the page).
+
+          Anchored via `right` so its right edge sits a fixed gap to the left
+          of the centered article column. The shell's article column is
+          `max-w-2xl` (42rem, half = 21rem) shifted left by ~1.25rem at xl.
+          Only shown at xl+ where there is room without overlapping. */}
+      {mounted &&
+        createPortal(
+          <aside
+            aria-label="Table of contents"
+            className="hidden xl:block fixed top-40 z-10"
+            style={{
+              // right = (viewport right) - (TOC right edge position)
+              // Article left edge is at `50% - 21rem - 1.25rem`.
+              // Push TOC so it ends 3.5rem before the article.
+              right: "calc(50% + 21rem + 1.25rem + 3.5rem)",
+              width: "10.5rem",
+            }}
+          >
+            <div className="mb-5">
+              <Breadcrumb category={meta.category} />
+            </div>
+            <nav>
+              <TocList toc={toc} activeId={activeId} />
+            </nav>
+          </aside>,
+          document.body,
+        )}
 
       {/* Mobile / tablet: breadcrumb + collapsible TOC */}
-      <div className="lg:hidden mb-6">
+      <div className="xl:hidden mb-6">
         <div className="mb-4">
           <Breadcrumb category={meta.category} />
         </div>
@@ -151,7 +174,10 @@ export function PostView({
       </div>
 
       <article ref={articleRef} className="max-w-2xl">
-        <div className="mb-4 text-xs text-gray-500 tabular-nums">
+        <div
+          className="mb-4 text-xs tabular-nums"
+          style={{ color: "#92908e" }}
+        >
           {formatDate(meta.date)}
           <span className="mx-1.5">·</span>
           {meta.readingTime}
