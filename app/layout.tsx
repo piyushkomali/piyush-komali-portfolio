@@ -10,7 +10,6 @@ const spaceGrotesk = Space_Grotesk({
 })
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
-import {MobileNavigation} from "@/components/mobile-navigation"
 import { NowPlaying } from "@/components/now-playing"
 import "./globals.css"
 
@@ -31,7 +30,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans ${spaceGrotesk.variable} ${GeistMono.variable}`}>
-        <MobileNavigation />
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         <NowPlaying />
         <Analytics />
