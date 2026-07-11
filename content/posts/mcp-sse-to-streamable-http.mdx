@@ -1,105 +1,78 @@
 export const meta = {
   slug: "mcp-sse-to-streamable-http",
-  title: "Why did MCP switch from SSE to Streamable HTTP?",
+  title: "I asked myself why did MCP switch from SSE to Streamable HTTP. Here's why.",
   date: "2026-06-20",
-  readingTime: "6 min read",
+  readingTime: "3 min read",
   category: "Writing",
   excerpt:
-    "A short walk through the two MCP remote transports — HTTP+SSE and Streamable HTTP — and the auth, scaling, and reliability reasons behind the switch.",
+    "A walk through the two MCP remote transports — HTTP+SSE and Streamable HTTP — and the auth, scaling, and reliability reasons behind the switch.",
 }
 
 export const toc = [
-  { id: "introduction", title: "Introduction", level: 2 },
-  { id: "a-quick-primer-on-mcp", title: "A quick primer on MCP", level: 2 },
-  { id: "the-original-transport-http--sse", title: "The original transport: HTTP + SSE", level: 2 },
-  { id: "how-the-two-endpoints-worked", title: "How the two endpoints worked", level: 3 },
-  { id: "problems-with-http--sse", title: "Problems with HTTP + SSE", level: 2 },
-  { id: "the-new-transport-streamable-http", title: "The new transport: Streamable HTTP", level: 2 },
-  { id: "how-streamable-http-works", title: "How Streamable HTTP works", level: 3 },
-  { id: "why-the-switch-matters", title: "Why the switch matters", level: 2 },
-  { id: "takeaways", title: "Takeaways", level: 2 },
+  { id: "httpsse-protocol", title: "HTTP+SSE protocol", level: 3 },
+  { id: "streamable-http-protocol", title: "Streamable HTTP protocol.", level: 3 },
+  { id: "why-did-they-switch", title: "Why did they switch?", level: 3 },
 ]
 
-> This is a paraphrased summary of my
-> [original Medium post](https://medium.com/@komalipiyush/i-asked-myself-why-did-mcp-switch-from-sse-to-streamable-http-heres-why-b123683af2a1).
-> Written up here for the blog, with the same key arguments.
+Recently, I encountered something that I found I had never dealt with before. Setting up an MCP server that wasn't a one click set up or paste-able JSON into a config file.
 
-## Introduction
+I had to actually choose whether the server supported Streamable HTTP or SSE(+HTTP). So I found myself trying to understand what separated both protocols and why MCP switched to Streamable HTTP
 
-Recently I was setting up an MCP server that wasn't a one-click install or a copy-paste JSON snippet into some config file. For the first time I actually had to pick a transport — did the server support **Streamable HTTP** or **HTTP + SSE**?
+### HTTP+SSE protocol
 
-That question sent me down a small rabbit hole: what's actually different between the two, and why did the MCP spec move on from SSE?
+Before the push for Streamable HTTP as the remote transport standard, MCP used a combination of HTTP with SSE.
 
-## A quick primer on MCP
+It worked with these two endpoints:
 
-The Model Context Protocol (MCP) is a spec for how clients (usually an LLM agent or IDE) talk to servers that expose tools, resources, and prompts. Messages are JSON-RPC. Locally, `stdio` works fine — but when the server lives somewhere else on the network, you need a *remote transport*.
+`GET /<example-sse>:`
 
-There have been two remote transports so far:
+A client opens up a channel with a `GET` request using the `EventSource` browser API which handled all the necessary details to keep the connection open so the server could stream back tool call results/notifications/updates etc. in the same session.
 
-1. **HTTP + SSE** — the original, now deprecated.
-2. **Streamable HTTP** — the current standard.
+`POST /<example-client-message>:`
 
-Both are bidirectional, both are HTTP under the hood, and both can stream. The interesting question is: why did the spec swap one out for the other?
+Think of this channel as the client/agents request for tools/list or tools/call. A client could send multiple separate POST requests and expect to get back each response via the same GET channel. For this reason, the server will always responded with `202 Accepted` to any POST.
 
-## The original transport: HTTP + SSE
+### Streamable HTTP protocol.
 
-Before Streamable HTTP, MCP's remote transport used two separate endpoints — one for a long-lived Server-Sent Events channel and one for client requests.
+Streamable HTTP fundamentally works similar, however, in practice promotes higher safety guardrails and is more intentional.
 
-### How the two endpoints worked
+There is a single endpoint that mainly serves POST requests:
 
-`GET /sse`
-The client opens a Server-Sent Events channel with a `GET` request. Under the hood this used the browser's [`EventSource`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/EventSource) API, which handles reconnection, framing, and event parsing for you. The server uses this channel to stream tool results, notifications, and updates back to the client for the whole session.
+`POST /mcp:`
 
-`POST /messages`
-The client uses a separate `POST` endpoint to send things like `tools/list` or `tools/call`. Because responses come back over the SSE channel instead of the POST response, the server always replies to a POST with a plain `202 Accepted`.
+This works essentially exactly like HTTP+SSE with the client initiating this HTTP request with a JSON-RPC message(request, notification, response).
 
-So one connection carries all server→client traffic, and every client→server message is a fire-and-forget POST that gets acknowledged, but answered elsewhere.
+We won't cover client notifications, responses but since this is bi-directional they're available, and the server always responds with `202 Accepted`. You can learn more from the [MCP transport specs](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).
 
-## Problems with HTTP + SSE
+Mainly, we see clients issuing requests, in which case the server will send a single `application/json` response or initiate an SSE stream with the `Content-Type:text/event-stream` header.
 
-That setup works, but a few things are awkward once you try to run it in the real world:
+The server can handle this event-stream in a host of ways such as sending requests, notifications, terminating the connection, and of course SSE events, but will always eventually send a final response to the request.
 
-- **Auth headers didn't fit.** The `EventSource` constructor doesn't let you set custom headers, so many implementations ended up passing tokens in the query string — `GET /sse?token=eyJhb...` — which then get logged by proxies, load balancers, and CDNs on the way through.
-- **Every server had to be stateful.** With responses flowing back over the SSE channel, the server has to remember which open `GET` connection each `POST` request belongs to. That mapping lives in memory on one specific machine.
-- **Scaling out was painful.** Once you go from one server to two, load balancing gets tricky: every `POST` for a given session has to be routed back to the exact server holding that session's SSE channel. Otherwise the response has nowhere to go.
-- **Dropped connections were rough.** SSE streams die — laptops sleep, networks flap, proxies time out. There wasn't a clean, standard way to resume where you left off.
+`GET /mcp:`
 
-The protocol worked, but it was pushing browser primitives past what they were designed for.
+Optionally, the server also supports the GET HTTP method. **You may think this is looking very similar to HTTP+SSE, but a key difference is this GET request is not sent with the** `EventSource` **API, and communication is unrelated to any ongoing client requests.**
 
-## The new transport: Streamable HTTP
+Instead, this GET channel is typically used for server initiated communication such as resuming an event-stream started by a previous client POST request, but was interrupted. Now the server just starts [redelivering missed SSE events](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#resumability-and-redelivery).
 
-Streamable HTTP keeps the shape of what SSE was doing — bidirectional, streaming JSON-RPC — but collapses it onto a single endpoint and stops relying on `EventSource`.
+> A little fun side quest I found was that MCP was actually late to this party.
+>
+> Lots of LLM chat completion APIs always used a format of Streamable HTTP to stream tokens to clients with the POST request and Accepting a `text/event-stream` format.
+>
+> Google even updated DevTools by popular demand in order to show an 'EventStream' tab to accommodate for SSE event-streams that weren't sent only by the EventSource API.
 
-### How Streamable HTTP works
+[What's new in DevTools (Chrome 123)](https://developer.chrome.com/blog/new-in-devtools-123#event-stream)
 
-There is one endpoint, typically `POST /mcp`, that serves both directions:
+### Why did they switch?
 
-`POST /mcp`
-The client sends a JSON-RPC message (request, notification, or response). The server has two choices for how to reply:
+- One of the biggest reasons for the protocol switch was a huge authentication concern. Because HTTP+SSE used the `EventSource` browser API — whose [constructor](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/EventSource) didn't allow for custom headers — developers were required to unsafely put authentication headers in query params.
 
-- Return a single `application/json` response, or
-- Upgrade the response to a stream by setting `Content-Type: text/event-stream` and sending SSE-formatted events back over that same HTTP response.
+> `GET /sse?token=eyJhb… <- this can be logged in proxies, load balancers, etc.`
 
-Because the streaming happens on the response of a normal `POST`, custom headers (including `Authorization`) work exactly like they do for any other HTTP request. Notifications and responses the client sends still get a `202 Accepted`.
+- EventSource browser API to establish the GET /sse connection bc constructors do not allow passing headers so defaulted to Accept: text/event-stream [https://developer.mozilla.org/en-US/docs/Web/API/EventSource/EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/EventSource)
+- SSE with 1 server meant managing the complexity and overhead of being Stateful in order to map GET responses to respective POST requests.
+- Scaling SSE with 2 servers meant load balancing 2 servers was more complicated to have to route each POST request to the right server where the GET connection was active to stream back the tool responses
+- SSE had issues with connections dropping. In Streamable HTTP this is addressed. When the server initiates an event-stream it will immediately send an empty SSE event with an `Last-Event-ID` so the client has the sufficient info to reconnect.
 
-`GET /mcp` *(optional)*
-The server can also expose `GET /mcp` for server-initiated communication — most usefully, for resuming an event stream that was started by a prior `POST` but got interrupted. The key thing here is that this `GET` is *not* an `EventSource` connection and isn't tied to any specific in-flight request. It's more of a "reconnect and let me redeliver missed events" channel, using the `Last-Event-ID` header the spec defines for [resumability and redelivery](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#resumability-and-redelivery).
+**Overall, Streamable HTTP is easier to implement, more secure, more reliable and more flexible.**
 
-A fun side note: MCP was actually late to this pattern. LLM chat-completion APIs have been doing exactly this — `POST` a request, `Accept: text/event-stream`, stream tokens back — for years. Chrome even [added a dedicated EventStream tab to DevTools](https://developer.chrome.com/blog/new-in-devtools-123#event-stream) because so many services were streaming SSE from `POST` responses that weren't coming from `EventSource`.
-
-## Why the switch matters
-
-The change is small on paper — one endpoint instead of two, drop `EventSource` — but it fixes each of the pain points from the SSE design:
-
-- **Auth is boring again.** You use a normal `Authorization` header on the `POST`. Nothing leaks into a URL that ends up in a proxy log.
-- **Servers can be (mostly) stateless.** The response to a request comes back on the *same HTTP request*, so there's no need to remember which SSE channel belongs to which POST.
-- **Horizontal scaling is easier.** Any server behind the load balancer can answer any request, because there's no session-pinned SSE channel to route back to. Resumption is opt-in via `GET /mcp` and `Last-Event-ID`.
-- **Reliability is built in.** When the server starts an event stream, it can send an initial event with a `Last-Event-ID`, so if the connection drops the client has everything it needs to reconnect and pick up where it left off.
-
-## Takeaways
-
-- HTTP + SSE was fine as a v1, but it inherited a bunch of constraints from the `EventSource` browser API — no custom headers, session-pinned state, awkward scaling.
-- Streamable HTTP moves the streaming onto a normal `POST` response, keeps an optional `GET` around purely for server-initiated communication and resumption, and gets to use plain HTTP semantics for auth and load balancing.
-- Net-net: **Streamable HTTP is easier to implement, more secure, more reliable, and more flexible.** That's the "why" behind the switch.
-
-If you want the spec-level details, the [MCP transports doc](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http) is the source of truth.
+[Transports — Model Context Protocol](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http)
