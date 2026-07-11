@@ -49,7 +49,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         </a>
       </div>
 
-      <div className="max-w-2xl mx-auto w-full">
+      <div className="max-w-2xl mx-auto w-full lg:-translate-x-4 xl:-translate-x-5">
         <div className="space-y-6 text-left">
           {/* Name */}
           <div>
