@@ -1,0 +1,105 @@
+export const meta = {
+  slug: "mcp-sse-to-streamable-http",
+  title: "Why did MCP switch from SSE to Streamable HTTP?",
+  date: "2026-06-20",
+  readingTime: "6 min read",
+  category: "Writing",
+  excerpt:
+    "A short walk through the two MCP remote transports — HTTP+SSE and Streamable HTTP — and the auth, scaling, and reliability reasons behind the switch.",
+}
+
+export const toc = [
+  { id: "introduction", title: "Introduction", level: 2 },
+  { id: "a-quick-primer-on-mcp", title: "A quick primer on MCP", level: 2 },
+  { id: "the-original-transport-http--sse", title: "The original transport: HTTP + SSE", level: 2 },
+  { id: "how-the-two-endpoints-worked", title: "How the two endpoints worked", level: 3 },
+  { id: "problems-with-http--sse", title: "Problems with HTTP + SSE", level: 2 },
+  { id: "the-new-transport-streamable-http", title: "The new transport: Streamable HTTP", level: 2 },
+  { id: "how-streamable-http-works", title: "How Streamable HTTP works", level: 3 },
+  { id: "why-the-switch-matters", title: "Why the switch matters", level: 2 },
+  { id: "takeaways", title: "Takeaways", level: 2 },
+]
+
+> This is a paraphrased summary of my
+> [original Medium post](https://medium.com/@komalipiyush/i-asked-myself-why-did-mcp-switch-from-sse-to-streamable-http-heres-why-b123683af2a1).
+> Written up here for the blog, with the same key arguments.
+
+## Introduction
+
+Recently I was setting up an MCP server that wasn't a one-click install or a copy-paste JSON snippet into some config file. For the first time I actually had to pick a transport — did the server support **Streamable HTTP** or **HTTP + SSE**?
+
+That question sent me down a small rabbit hole: what's actually different between the two, and why did the MCP spec move on from SSE?
+
+## A quick primer on MCP
+
+The Model Context Protocol (MCP) is a spec for how clients (usually an LLM agent or IDE) talk to servers that expose tools, resources, and prompts. Messages are JSON-RPC. Locally, `stdio` works fine — but when the server lives somewhere else on the network, you need a *remote transport*.
+
+There have been two remote transports so far:
+
+1. **HTTP + SSE** — the original, now deprecated.
+2. **Streamable HTTP** — the current standard.
+
+Both are bidirectional, both are HTTP under the hood, and both can stream. The interesting question is: why did the spec swap one out for the other?
+
+## The original transport: HTTP + SSE
+
+Before Streamable HTTP, MCP's remote transport used two separate endpoints — one for a long-lived Server-Sent Events channel and one for client requests.
+
+### How the two endpoints worked
+
+`GET /sse`
+The client opens a Server-Sent Events channel with a `GET` request. Under the hood this used the browser's [`EventSource`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/EventSource) API, which handles reconnection, framing, and event parsing for you. The server uses this channel to stream tool results, notifications, and updates back to the client for the whole session.
+
+`POST /messages`
+The client uses a separate `POST` endpoint to send things like `tools/list` or `tools/call`. Because responses come back over the SSE channel instead of the POST response, the server always replies to a POST with a plain `202 Accepted`.
+
+So one connection carries all server→client traffic, and every client→server message is a fire-and-forget POST that gets acknowledged, but answered elsewhere.
+
+## Problems with HTTP + SSE
+
+That setup works, but a few things are awkward once you try to run it in the real world:
+
+- **Auth headers didn't fit.** The `EventSource` constructor doesn't let you set custom headers, so many implementations ended up passing tokens in the query string — `GET /sse?token=eyJhb...` — which then get logged by proxies, load balancers, and CDNs on the way through.
+- **Every server had to be stateful.** With responses flowing back over the SSE channel, the server has to remember which open `GET` connection each `POST` request belongs to. That mapping lives in memory on one specific machine.
+- **Scaling out was painful.** Once you go from one server to two, load balancing gets tricky: every `POST` for a given session has to be routed back to the exact server holding that session's SSE channel. Otherwise the response has nowhere to go.
+- **Dropped connections were rough.** SSE streams die — laptops sleep, networks flap, proxies time out. There wasn't a clean, standard way to resume where you left off.
+
+The protocol worked, but it was pushing browser primitives past what they were designed for.
+
+## The new transport: Streamable HTTP
+
+Streamable HTTP keeps the shape of what SSE was doing — bidirectional, streaming JSON-RPC — but collapses it onto a single endpoint and stops relying on `EventSource`.
+
+### How Streamable HTTP works
+
+There is one endpoint, typically `POST /mcp`, that serves both directions:
+
+`POST /mcp`
+The client sends a JSON-RPC message (request, notification, or response). The server has two choices for how to reply:
+
+- Return a single `application/json` response, or
+- Upgrade the response to a stream by setting `Content-Type: text/event-stream` and sending SSE-formatted events back over that same HTTP response.
+
+Because the streaming happens on the response of a normal `POST`, custom headers (including `Authorization`) work exactly like they do for any other HTTP request. Notifications and responses the client sends still get a `202 Accepted`.
+
+`GET /mcp` *(optional)*
+The server can also expose `GET /mcp` for server-initiated communication — most usefully, for resuming an event stream that was started by a prior `POST` but got interrupted. The key thing here is that this `GET` is *not* an `EventSource` connection and isn't tied to any specific in-flight request. It's more of a "reconnect and let me redeliver missed events" channel, using the `Last-Event-ID` header the spec defines for [resumability and redelivery](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#resumability-and-redelivery).
+
+A fun side note: MCP was actually late to this pattern. LLM chat-completion APIs have been doing exactly this — `POST` a request, `Accept: text/event-stream`, stream tokens back — for years. Chrome even [added a dedicated EventStream tab to DevTools](https://developer.chrome.com/blog/new-in-devtools-123#event-stream) because so many services were streaming SSE from `POST` responses that weren't coming from `EventSource`.
+
+## Why the switch matters
+
+The change is small on paper — one endpoint instead of two, drop `EventSource` — but it fixes each of the pain points from the SSE design:
+
+- **Auth is boring again.** You use a normal `Authorization` header on the `POST`. Nothing leaks into a URL that ends up in a proxy log.
+- **Servers can be (mostly) stateless.** The response to a request comes back on the *same HTTP request*, so there's no need to remember which SSE channel belongs to which POST.
+- **Horizontal scaling is easier.** Any server behind the load balancer can answer any request, because there's no session-pinned SSE channel to route back to. Resumption is opt-in via `GET /mcp` and `Last-Event-ID`.
+- **Reliability is built in.** When the server starts an event stream, it can send an initial event with a `Last-Event-ID`, so if the connection drops the client has everything it needs to reconnect and pick up where it left off.
+
+## Takeaways
+
+- HTTP + SSE was fine as a v1, but it inherited a bunch of constraints from the `EventSource` browser API — no custom headers, session-pinned state, awkward scaling.
+- Streamable HTTP moves the streaming onto a normal `POST` response, keeps an optional `GET` around purely for server-initiated communication and resumption, and gets to use plain HTTP semantics for auth and load balancing.
+- Net-net: **Streamable HTTP is easier to implement, more secure, more reliable, and more flexible.** That's the "why" behind the switch.
+
+If you want the spec-level details, the [MCP transports doc](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http) is the source of truth.
