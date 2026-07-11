@@ -6,10 +6,7 @@ export function HeroSection() {
   return (
     <SiteShell>
       {/* Description */}
-      <div
-        className="space-y-3 text-sm sm:text-base lg:text-lg leading-relaxed text-gray-300 max-w-xl"
-        style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
-      >
+      <div className="space-y-3 text-sm sm:text-base lg:text-lg leading-relaxed text-gray-300 max-w-xl">
         <p>
           hi! i'm piyush, a computer science student at virginia tech. I love watching <span className="text-white font-medium">films</span> and playing <span className="text-white font-medium">ultimate frisbee</span>.
         </p>
