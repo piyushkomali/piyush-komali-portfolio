@@ -27,10 +27,14 @@ export default function PostPage({ params }: { params: { slug: string } }) {
   const MDX = post.default
 
   return (
-    <SiteShell>
-      <PostView meta={post.meta} toc={post.toc}>
-        <MDX />
-      </PostView>
-    </SiteShell>
+    <main className="min-h-screen">
+      <div className="pt-16">
+        <SiteShell>
+          <PostView meta={post.meta} toc={post.toc}>
+            <MDX />
+          </PostView>
+        </SiteShell>
+      </div>
+    </main>
   )
 }

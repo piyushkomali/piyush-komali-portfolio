@@ -10,19 +10,24 @@ export const metadata: Metadata = {
 
 export default function PostsPage() {
   return (
-    <SiteShell>
-      <div className="space-y-8">
-        <p
-          className="text-sm sm:text-base text-gray-300 max-w-xl leading-relaxed"
-          style={{
-            fontFamily:
-              'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          }}
-        >
-          writing. short essays and notes on things i've been thinking about.
-        </p>
-        <PostsList posts={posts} />
+    <main className="min-h-screen">
+      <div className="pt-16">
+        <SiteShell>
+          <div className="space-y-8">
+            <p
+              className="text-sm sm:text-base text-gray-300 max-w-xl leading-relaxed"
+              style={{
+                fontFamily:
+                  'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              }}
+            >
+              writing. short essays and notes on things i've been thinking about.
+            </p>
+            <PostsList posts={posts} />
+          </div>
+          <div className="h-24" />
+        </SiteShell>
       </div>
-    </SiteShell>
+    </main>
   )
 }
