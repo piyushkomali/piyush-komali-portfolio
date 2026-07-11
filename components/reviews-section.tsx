@@ -19,7 +19,7 @@ const reviews: Review[] = [
   {
     id: "dune-2",
     title: "Dune: Part Two",
-    poster: "https://image.tmdb.org/t/p/w200/8b8R8l88Qje9dn9OE8PY05Nez7H.jpg",
+    poster: "https://image.tmdb.org/t/p/w200/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
     rating: 4.5,
     snippet:
       "Villeneuve delivers a masterclass in world-building. The sandworm riding sequence alone justifies the price of admission.",
@@ -59,7 +59,7 @@ const reviews: Review[] = [
   {
     id: "past-lives",
     title: "Past Lives",
-    poster: "https://image.tmdb.org/t/p/w200/k7eYdW0G5FnJFgagb9JIqN3BbJg.jpg",
+    poster: "https://image.tmdb.org/t/p/w200/k3waqVXSnvCZWfJYNtdamTgTtTA.jpg",
     rating: 4.5,
     snippet:
       "Celine Song's debut is devastating in its restraint. Two childhood friends reconnect across decades and continents.",
@@ -155,15 +155,6 @@ export function ReviewsSection() {
 
   return (
     <div className="max-w-xl" style={{ fontFamily: INTER_FONT }}>
-      {/* Intro */}
-      <div
-        className="space-y-3 text-sm sm:text-base lg:text-lg leading-relaxed text-gray-300 max-w-xl mb-10"
-      >
-        <p>
-          movie reviews. a running log of what i&apos;ve been watching lately.
-        </p>
-      </div>
-
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-[color:var(--border)]">
         <h2 className="text-gray-400 text-xs font-medium tracking-[0.2em] uppercase">
