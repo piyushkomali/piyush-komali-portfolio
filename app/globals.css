@@ -185,6 +185,11 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .animate-eq {
+    animation: eq 1s ease-in-out infinite;
+    transform-origin: bottom;
+  }
 }
 
 @keyframes gradient-x {
@@ -205,5 +210,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
   }
 }
