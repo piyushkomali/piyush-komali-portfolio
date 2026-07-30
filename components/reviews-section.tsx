@@ -1,72 +1,51 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Star, StarHalf } from "lucide-react"
 
 const INTER_FONT = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
 
-type Review = {
+type ApiReview = {
+  id: string
+  title: string
+  year: number | null
+  poster_url: string | null
+  rating: number
+  liked: boolean
+  rewatch: boolean
+  review: string | null
+  watched_on: string // "YYYY-MM-DD"
+  tags: string[]
+  letterboxd_url: string | null
+  tmdb_id: number | null
+  created_at: string
+}
+
+type DisplayReview = {
   id: string
   title: string
   poster: string
-  rating: number // 0..5, halves allowed
+  rating: number
   snippet: string
-  month: string // "Jan" | "Feb" | "Mar" | ...
+  month: string
   day: number
 }
 
-const reviews: Review[] = [
-  {
-    id: "dune-2",
-    title: "Dune: Part Two",
-    poster: "https://image.tmdb.org/t/p/w200/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
-    rating: 4.5,
-    snippet:
-      "Villeneuve delivers a masterclass in world-building. The sandworm riding sequence alone justifies the price of admission.",
-    month: "Mar",
-    day: 2,
-  },
-  {
-    id: "oppenheimer",
-    title: "Oppenheimer",
-    poster: "https://image.tmdb.org/t/p/w200/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-    rating: 5,
-    snippet:
-      "Nolan's most human film is also his most terrifying. Cillian Murphy's haunted eyes carry three hours of moral weight effortlessly.",
-    month: "Feb",
-    day: 22,
-  },
-  {
-    id: "the-batman",
-    title: "The Batman",
-    poster: "https://image.tmdb.org/t/p/w200/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-    rating: 4,
-    snippet:
-      "A noir-drenched detective story that finally treats Batman as the world's greatest detective. Pattinson brings a wounded vulnerability.",
-    month: "Feb",
-    day: 14,
-  },
-  {
-    id: "eeaao",
-    title: "Everything Everywhere All at Once",
-    poster: "https://image.tmdb.org/t/p/w200/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
-    rating: 5,
-    snippet:
-      "The Daniels somehow made a film about tax audits, hot dog fingers, and googly eyes that reduced me to tears. Michelle Yeoh is extraordinary.",
-    month: "Jan",
-    day: 27,
-  },
-  {
-    id: "past-lives",
-    title: "Past Lives",
-    poster: "https://image.tmdb.org/t/p/w200/k3waqVXSnvCZWfJYNtdamTgTtTA.jpg",
-    rating: 4.5,
-    snippet:
-      "Celine Song's debut is devastating in its restraint. Two childhood friends reconnect across decades and continents.",
-    month: "Jan",
-    day: 18,
-  },
-]
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+function toDisplay(r: ApiReview): DisplayReview {
+  const [y, m, d] = r.watched_on.split("-").map((n) => Number.parseInt(n, 10))
+  void y
+  return {
+    id: r.id,
+    title: r.title,
+    poster: r.poster_url || "",
+    rating: Number(r.rating),
+    snippet: r.review || "",
+    month: MONTHS[Math.max(0, Math.min(11, (m || 1) - 1))],
+    day: d || 1,
+  }
+}
 
 function Stars({ rating }: { rating: number }) {
   const full = Math.floor(rating)
@@ -76,34 +55,16 @@ function Stars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-[2px]" aria-label={`${rating} out of 5 stars`}>
       {Array.from({ length: full }).map((_, i) => (
-        <Star
-          key={`full-${i}`}
-          className="w-3 h-3 text-white"
-          fill="currentColor"
-          strokeWidth={0}
-        />
+        <Star key={`full-${i}`} className="w-3 h-3 text-white" fill="currentColor" strokeWidth={0} />
       ))}
       {hasHalf && (
         <div className="relative w-3 h-3">
-          <Star
-            className="absolute inset-0 w-3 h-3 text-white/15"
-            fill="currentColor"
-            strokeWidth={0}
-          />
-          <StarHalf
-            className="absolute inset-0 w-3 h-3 text-white"
-            fill="currentColor"
-            strokeWidth={0}
-          />
+          <Star className="absolute inset-0 w-3 h-3 text-white/15" fill="currentColor" strokeWidth={0} />
+          <StarHalf className="absolute inset-0 w-3 h-3 text-white" fill="currentColor" strokeWidth={0} />
         </div>
       )}
       {Array.from({ length: empties }).map((_, i) => (
-        <Star
-          key={`empty-${i}`}
-          className="w-3 h-3 text-white/15"
-          fill="currentColor"
-          strokeWidth={0}
-        />
+        <Star key={`empty-${i}`} className="w-3 h-3 text-white/15" fill="currentColor" strokeWidth={0} />
       ))}
     </div>
   )
@@ -114,14 +75,9 @@ function PosterImage({ src, alt }: { src: string; alt: string }) {
 
   return (
     <div className="shrink-0 w-[34px] h-[50px] max-[480px]:w-[28px] max-[480px]:h-[42px] rounded-[3px] overflow-hidden bg-[color:var(--muted)] border border-[color:var(--border)]">
-      {!broken && (
+      {!broken && src && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={src}
-          alt={alt}
-          className="w-full h-full object-cover"
-          onError={() => setBroken(true)}
-        />
+        <img src={src} alt={alt} className="w-full h-full object-cover" onError={() => setBroken(true)} />
       )}
     </div>
   )
@@ -141,10 +97,36 @@ function DateMarker({ label, muted }: { label: string; muted: boolean }) {
 }
 
 export function ReviewsSection() {
+  const [reviews, setReviews] = useState<DisplayReview[] | null>(null)
+  const [errored, setErrored] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await fetch("/api/reviews", { cache: "no-store" })
+        if (!res.ok) throw new Error("bad status")
+        const data = (await res.json()) as { reviews: ApiReview[] }
+        if (cancelled) return
+        setReviews((data.reviews || []).map(toDisplay))
+      } catch {
+        if (!cancelled) {
+          setErrored(true)
+          setReviews([])
+        }
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // Compute date markers: first entry per month gets month label, subsequent get day number.
+  const list = reviews ?? []
   const markers: { label: string; muted: boolean }[] = []
   let currentMonth = ""
-  for (const r of reviews) {
+  for (const r of list) {
     if (r.month !== currentMonth) {
       markers.push({ label: r.month, muted: false })
       currentMonth = r.month
@@ -161,18 +143,20 @@ export function ReviewsSection() {
           Recent Reviews
         </h2>
         <span className="text-[11px] text-[color:var(--muted-foreground)] tracking-wide">
-          {reviews.length} reviews
+          {reviews === null ? "…" : `${list.length} reviews`}
         </span>
       </div>
 
       {/* List */}
-      {reviews.length === 0 ? (
+      {reviews === null ? (
+        <p className="mt-6 text-sm text-[color:var(--muted-foreground)]">Loading…</p>
+      ) : list.length === 0 ? (
         <p className="mt-6 text-sm text-[color:var(--muted-foreground)]">
-          No reviews yet.
+          {errored ? "Reviews unavailable right now." : "No reviews yet."}
         </p>
       ) : (
         <ul className="mt-4 space-y-2">
-          {reviews.map((review, i) => {
+          {list.map((review, i) => {
             const marker = markers[i]
             return (
               <li key={review.id} className="flex items-start gap-2">
@@ -193,10 +177,8 @@ export function ReviewsSection() {
                       <p
                         className="mt-1 text-[12px] max-[480px]:text-[11px] leading-snug text-[color:var(--muted-foreground)] whitespace-nowrap overflow-hidden"
                         style={{
-                          maskImage:
-                            "linear-gradient(to right, black 60%, transparent 95%)",
-                          WebkitMaskImage:
-                            "linear-gradient(to right, black 60%, transparent 95%)",
+                          maskImage: "linear-gradient(to right, black 60%, transparent 95%)",
+                          WebkitMaskImage: "linear-gradient(to right, black 60%, transparent 95%)",
                         }}
                       >
                         {review.snippet}
