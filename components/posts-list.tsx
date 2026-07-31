@@ -44,10 +44,10 @@ export function PostsList({ posts }: { posts: PostMeta[] }) {
                 className={[
                   "grid grid-cols-1 items-center gap-x-[1.875rem] gap-y-1",
                   "md:grid-cols-[minmax(0,7fr)_minmax(0,17fr)]",
-                  "lg:grid-cols-[13rem_minmax(0,1fr)_max-content_max-content]",
+                  "lg:grid-cols-[8rem_minmax(0,1fr)_max-content]",
                 ].join(" ")}
               >
-                {/* Date · Category */}
+                {/* Date */}
                 <div
                   className="flex flex-wrap items-center gap-x-2 gap-y-0.5 self-center whitespace-nowrap text-[15px] sm:text-[15px] lg:col-start-1"
                   style={{ color: "#92908e" }}
@@ -55,8 +55,6 @@ export function PostsList({ posts }: { posts: PostMeta[] }) {
                   <time dateTime={post.date} className="tabular-nums">
                     {formatDate(post.date)}
                   </time>
-                  <span aria-hidden="true">·</span>
-                  <span className="capitalize">{post.category}</span>
                 </div>
 
                 {/* Title — single line with right-side fade if too long */}
@@ -76,17 +74,9 @@ export function PostsList({ posts }: { posts: PostMeta[] }) {
                   </div>
                 </div>
 
-                {/* Author (lg+ only) */}
-                <div
-                  className="hidden self-center whitespace-nowrap text-[15px] lg:col-start-3 lg:block"
-                  style={{ color: "#92908e" }}
-                >
-                  <span>Piyush Komali</span>
-                </div>
-
                 {/* Read time (lg+ only) */}
                 <div
-                  className="hidden self-center whitespace-nowrap text-[15px] lg:col-start-4 lg:block lg:text-right tabular-nums"
+                  className="hidden self-center whitespace-nowrap text-[15px] lg:col-start-3 lg:block lg:text-right tabular-nums"
                   style={{ color: "#92908e" }}
                 >
                   {readMinutes(post.readingTime)}
