@@ -8,10 +8,10 @@ export function HeroSection() {
       {/* Description */}
       <div className="space-y-3 text-sm sm:text-base lg:text-lg leading-relaxed text-gray-300 max-w-xl">
         <p>
-          hi! i'm piyush, a computer science student at virginia tech. I love watching <span className="text-white font-medium">films</span> and playing <span className="text-white font-medium">ultimate frisbee</span>.
+          hi! i'm piyush, a computer science student at virginia tech raised in charlotte. i love watching <a href="https://boxd.it/38Jc1" target="_blank" rel="noopener noreferrer" className="text-white font-medium underline decoration-dotted decoration-[#555] hover:decoration-white underline-offset-[3px] decoration-[1.5px] transition-colors duration-200">films</a> and playing <a href="https://www.ultirzr.app/player/650f06dbd595c47d2820421f" target="_blank" rel="noopener noreferrer" className="text-white font-medium underline decoration-dotted decoration-[#555] hover:decoration-white underline-offset-[3px] decoration-[1.5px] transition-colors duration-200">ultimate frisbee</a> in my free time.
         </p>
         <p>
-          professionally, i'm an aspiring software engineer who loves building full-stack web applications and exploring new technologies and learning as much as possible.
+          i love tinkering with the newest ai technologies and just finished as an intern at ibm. i'm heading into my final year of school so if you want to learn more about me feel free to look around.
         </p>
       </div>
 
@@ -71,18 +71,18 @@ export function HeroSection() {
               </div>
             </div>
 
-            {/* Yeh Jawaani Hai Deewani */}
+            {/* Past Lives */}
             <div className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
                 <img
-                  src="/images/yjhd.png"
-                  alt="Yeh Jawaani Hai Deewani"
+                  src="/images/past-lives.png"
+                  alt="Past Lives"
                   className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <h3 className="text-white font-medium text-xs">Yeh Jawaani Hai Deewani</h3>
-                  <p className="text-gray-300 text-[10px]">2013 • Romance/Comedy</p>
+                  <h3 className="text-white font-medium text-xs">Past Lives</h3>
+                  <p className="text-gray-300 text-[10px]">2023 • Romance/Drama</p>
                 </div>
               </div>
             </div>
