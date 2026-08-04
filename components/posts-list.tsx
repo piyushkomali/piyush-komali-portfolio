@@ -4,6 +4,8 @@ import type { PostMeta } from "@/lib/posts"
 const CARD_BG = "#1b1812"
 
 function formatDate(iso: string): string {
+  // Allow non-date strings (e.g. "Coming soon") to pass through untouched.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso
   const d = new Date(iso + "T00:00:00Z")
   return d.toLocaleDateString("en-US", {
     year: "numeric",

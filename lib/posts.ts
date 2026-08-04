@@ -1,7 +1,7 @@
 import type { ComponentType } from "react"
 
 import * as mcpSseToStreamableHttp from "@/content/posts/mcp-sse-to-streamable-http.mdx"
-import * as onTasteAndTooling from "@/content/posts/on-taste-and-tooling.mdx"
+import * as whyILoveDune from "@/content/posts/why-i-love-dune.mdx"
 
 export type PostMeta = {
   slug: string
@@ -26,7 +26,7 @@ type PostModule = {
 
 const postModules: Record<string, PostModule> = {
   "mcp-sse-to-streamable-http": mcpSseToStreamableHttp as unknown as PostModule,
-  "on-taste-and-tooling": onTasteAndTooling as unknown as PostModule,
+  "why-i-love-dune": whyILoveDune as unknown as PostModule,
 }
 
 export const posts: PostMeta[] = Object.values(postModules)
