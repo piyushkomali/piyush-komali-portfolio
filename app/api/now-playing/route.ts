@@ -26,19 +26,15 @@ export async function GET() {
     const recentUrl = `${LASTFM_BASE}?method=user.getrecenttracks&user=${LASTFM_USERNAME}&api_key=${LASTFM_API_KEY}&format=json&limit=8`
     const topArtistsUrl = `${LASTFM_BASE}?method=user.gettopartists&user=${LASTFM_USERNAME}&api_key=${LASTFM_API_KEY}&format=json&period=1month&limit=5`
     const topAlbumsUrl = `${LASTFM_BASE}?method=user.gettopalbums&user=${LASTFM_USERNAME}&api_key=${LASTFM_API_KEY}&format=json&period=1month&limit=6`
-    const userInfoUrl = `${LASTFM_BASE}?method=user.getinfo&user=${LASTFM_USERNAME}&api_key=${LASTFM_API_KEY}&format=json`
-
-    const [recentRes, topArtistsRes, topAlbumsRes, userInfoRes] = await Promise.all([
+    const [recentRes, topArtistsRes, topAlbumsRes] = await Promise.all([
       fetch(recentUrl, { cache: "no-store" }),
       fetch(topArtistsUrl, { cache: "no-store" }),
       fetch(topAlbumsUrl, { cache: "no-store" }),
-      fetch(userInfoUrl, { cache: "no-store" }),
     ])
 
     const recentData = recentRes.ok ? await recentRes.json() : null
     const topArtistsData = topArtistsRes.ok ? await topArtistsRes.json() : null
     const topAlbumsData = topAlbumsRes.ok ? await topAlbumsRes.json() : null
-    const userInfoData = userInfoRes.ok ? await userInfoRes.json() : null
 
     // --- Recent tracks ---
     const rawTracks = recentData?.recenttracks?.track
@@ -103,24 +99,6 @@ export async function GET() {
       image: pickImage(a.image),
     }))
 
-    // --- User stats ---
-    const user = userInfoData?.user
-    const stats = user
-      ? {
-          playcount: Number(user.playcount ?? 0),
-          artistCount: Number(user.artist_count ?? 0),
-          albumCount: Number(user.album_count ?? 0),
-          trackCount: Number(user.track_count ?? 0),
-          profileUrl: user.url ?? `https://www.last.fm/user/${LASTFM_USERNAME}`,
-        }
-      : {
-          playcount: 0,
-          artistCount: 0,
-          albumCount: 0,
-          trackCount: 0,
-          profileUrl: `https://www.last.fm/user/${LASTFM_USERNAME}`,
-        }
-
     return NextResponse.json(
       {
         username: LASTFM_USERNAME,
@@ -129,7 +107,6 @@ export async function GET() {
         recentTracks,
         topArtists,
         topAlbums,
-        stats,
       },
       {
         headers: {
