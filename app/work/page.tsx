@@ -70,16 +70,6 @@ const projects: Item[] = [
       "Implemented type-safe content delivery with schema validation, supporting high availability and secure content management.",
     ],
   },
-  {
-    title: "UFA Stats Application",
-    href: "https://github.com/piyushkomali",
-    bullets: [
-      "Developed and deployed a full-stack web app surfacing Ultimate Frisbee Association statistics, reducing lookup time by 35%.",
-      "Engineered REST APIs in Flask with CRUD operations, JWT authentication, and storage in PostgreSQL.",
-      "Integrated Agentic AI features using Cloudflare AutoRAG, enabling intelligent search for players/games and generating personalized statistic pages.",
-      "Deployed backend on AWS EC2 with CI/CD pipelines; designed frontend data visualizations using React.js + Tailwind for 150+ active users.",
-    ],
-  },
 ]
 
 function ItemBlock({ item }: { item: Item }) {
