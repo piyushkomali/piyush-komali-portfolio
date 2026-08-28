@@ -29,14 +29,6 @@ type Album = {
   image: string | null
 }
 
-type Stats = {
-  playcount: number
-  artistCount: number
-  albumCount: number
-  trackCount: number
-  profileUrl: string
-}
-
 type MusicData = {
   username: string
   nowPlaying: Track | null
@@ -44,7 +36,6 @@ type MusicData = {
   recentTracks: Track[]
   topArtists: Artist[]
   topAlbums: Album[]
-  stats: Stats
 }
 
 const STORAGE_KEY = "lastfm-last-seen-track-v1"
@@ -407,37 +398,6 @@ function TopAlbumsGrid({ albums }: { albums: Album[] }) {
 }
 
 /* --------------------------------------------------------------------- */
-/* Stats strip                                                           */
-/* --------------------------------------------------------------------- */
-
-function StatsStrip({ stats }: { stats: Stats }) {
-  const items = [
-    { label: "scrobbles", value: formatNumber(stats.playcount) },
-    { label: "artists", value: formatNumber(stats.artistCount) },
-    { label: "albums", value: formatNumber(stats.albumCount) },
-    { label: "tracks", value: formatNumber(stats.trackCount) },
-  ]
-
-  return (
-    <div className="grid grid-cols-4 gap-2 sm:gap-3">
-      {items.map((s) => (
-        <div
-          key={s.label}
-          className="rounded-[3px] border border-[#2a2a2a] bg-[#111111] px-2 py-3 sm:px-3 sm:py-3 text-center"
-        >
-          <p className="text-base sm:text-lg font-semibold text-white tabular-nums leading-none">
-            {s.value}
-          </p>
-          <p className="mt-1.5 text-[9px] sm:text-[10px] text-[#666] uppercase tracking-wider">
-            {s.label}
-          </p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* --------------------------------------------------------------------- */
 /* Skeleton                                                              */
 /* --------------------------------------------------------------------- */
 
@@ -445,14 +405,6 @@ function Skeleton() {
   return (
     <div className="space-y-8 animate-pulse">
       <div className="h-[120px] rounded-[4px] border border-[#2a2a2a] bg-[#111111]" />
-      <div className="grid grid-cols-4 gap-2 sm:gap-3">
-        {[0, 1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-[62px] rounded-[3px] border border-[#2a2a2a] bg-[#111111]"
-          />
-        ))}
-      </div>
       <div className="space-y-2">
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="h-[52px] rounded-[3px] bg-[#111111]" />
@@ -544,10 +496,10 @@ export function MusicSection() {
             {/* Hero */}
             <NowPlayingHero track={heroTrack} />
 
-            {/* Stats */}
+            {/* Top albums */}
             <div>
-              <SectionHeading right={`period · 1 month`}>Stats</SectionHeading>
-              <StatsStrip stats={data.stats} />
+              <SectionHeading right="last 30 days">Top Albums</SectionHeading>
+              <TopAlbumsGrid albums={data.topAlbums} />
             </div>
 
             {/* Recent tracks */}
@@ -569,11 +521,6 @@ export function MusicSection() {
               <TopArtistsList artists={data.topArtists} />
             </div>
 
-            {/* Top albums */}
-            <div>
-              <SectionHeading right="last 30 days">Top Albums</SectionHeading>
-              <TopAlbumsGrid albums={data.topAlbums} />
-            </div>
           </div>
         ) : null}
       </div>
