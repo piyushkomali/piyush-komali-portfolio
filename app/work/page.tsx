@@ -13,9 +13,14 @@ type Item = {
 const experiences: Item[] = [
   {
     title: "AI Engineer Intern",
-    org: "IBM oLabs",
-    date: "summer 2026",
-    bullets: [],
+    org: "IBM",
+    date: "may – aug 2026",
+    bullets: [
+      "Implemented a LangGraph agentic AI solution to streamline government contract acquisition for the DHS, exposing an Agent-to-Agent (A2A) endpoint via JSON-RPC that cuts 6+ hours each day in review time.",
+      "Architected a suite of agents equipped with custom tools and FastMCP-based integrations to autonomously fetch and evaluate SAM.gov data and documents for accurate context, reducing retrieval time by 66%.",
+      "Engineered a remote interface on an Express.js backend, empowering developers to access IBM’s internal AI coding agent from mobile devices via secure Tailscale and SSH connections to local workstations.",
+      "Leveraged tmux to scrape dynamic terminal outputs and stream real-time progress via a seamless Slack integration, unlocking asynchronous workflows and on-the-go code generation.",
+    ],
   },
   {
     title: "Software Engineer Intern",
@@ -33,14 +38,29 @@ const experiences: Item[] = [
     org: "VTHacks",
     date: "feb – sept 2025",
     bullets: [
-      "Led development of event application used by 1000+ participants, integrating features for navigation, check-in, and sponsor engagement with Next.js and Shadcn.",
-      "Integrated Supabase Auth and designed relational SQL schemas to improve real-time event validation and data accuracy by 30%.",
-      "Migrated legacy backend to structured PostgreSQL, applying principles of data modeling, reducing manual effort by 50%.",
+      "Led development and PostgreSQL migration of a Next.js event app for 1000+ participants.",
     ],
   },
 ]
 
 const projects: Item[] = [
+  {
+    title: "Agentic AI Stadium Map",
+    bullets: [
+      "Developed an agentic AI stadium map using the AI SDK and ChromaDB semantic vector search, allowing users to query food preferences, stadium policies, and transit options via natural language.",
+      "Integrated an interactive Mapbox map and Konva UI with Next.js so users can conversationally browse seats, select tickets, and intelligently locate amenities.",
+      "Engineered geospatial distance math and programmatic UI tools, empowering the AI agent to autonomously highlight nearby locations, control camera zoom, and draw multi-leg navigation.",
+    ],
+  },
+  {
+    title: "ShopAI",
+    href: "https://shopping.piyushkomali.com",
+    bullets: [
+      "Built a collaborative agentic shopping-list interface using Durable Objects and WebSockets, enabling persistent shared lists, synchronized CRUD updates, and real-time session counts across clients.",
+      "Integrated Cloudflare Workers AI with the Llama 4 Scout model to convert natural-language meal requests into validated grocery-item arrays, enabling conversational list creation.",
+      "Deployed the Next.js and TypeScript stack on Cloudflare Workers with Vinext and Vite, connecting route handlers to Workers AI and Durable Object bindings for an edge-hosted full-stack architecture.",
+    ],
+  },
   {
     title: "JEART Portfolio",
     href: "https://jeremyevansart.com",
