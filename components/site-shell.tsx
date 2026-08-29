@@ -21,7 +21,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           href="https://github.com/piyushkomali"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
+          className="text-[13px] text-[#c9c9c9] hover:text-white transition-colors duration-150 tracking-wide"
         >
           github
         </a>
@@ -29,13 +29,13 @@ export function SiteShell({ children }: { children: ReactNode }) {
           href="https://www.linkedin.com/in/piyush-komali-53bb09240"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
+          className="text-[13px] text-[#c9c9c9] hover:text-white transition-colors duration-150 tracking-wide"
         >
           linkedin
         </a>
         <a
           href="mailto:komali.piyush@gmail.com"
-          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
+          className="text-[13px] text-[#c9c9c9] hover:text-white transition-colors duration-150 tracking-wide"
         >
           email
         </a>
@@ -43,7 +43,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           href="https://x.com/piyushkomali"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
+          className="text-[13px] text-[#c9c9c9] hover:text-white transition-colors duration-150 tracking-wide"
         >
           twitter
         </a>
