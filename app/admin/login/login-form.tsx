@@ -6,7 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation"
 export function LoginForm() {
   const router = useRouter()
   const search = useSearchParams()
-  const next = search.get("next") || "/admin"
+  const requestedNext = search.get("next") || "/admin"
+  const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//")
+    ? requestedNext
+    : "/admin"
 
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)

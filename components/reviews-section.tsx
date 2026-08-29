@@ -112,7 +112,7 @@ export function ReviewsSection() {
       } catch {
         if (!cancelled) {
           setErrored(true)
-          setReviews([])
+          setReviews((current) => current ?? [])
         }
       }
     }
@@ -148,6 +148,11 @@ export function ReviewsSection() {
       </div>
 
       {/* List */}
+      {errored && list.length > 0 && (
+        <p className="mt-4 text-xs text-[color:var(--muted-foreground)]">
+          Reviews unavailable right now. Showing the last loaded results.
+        </p>
+      )}
       {reviews === null ? (
         <p className="mt-6 text-sm text-[color:var(--muted-foreground)]">Loading…</p>
       ) : list.length === 0 ? (
