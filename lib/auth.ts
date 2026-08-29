@@ -27,15 +27,6 @@ function b64urlDecode(s: string): Uint8Array {
   return out
 }
 
-function getSecret(): string {
-  // Prefer explicit secret; fall back to password so setup is easier.
-  return (
-    process.env.ADMIN_SESSION_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    ""
-  )
-}
-
 async function hmac(secret: string, data: string): Promise<string> {
   const enc = new TextEncoder()
   const key = await crypto.subtle.importKey(
@@ -57,8 +48,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 /** Build a signed cookie value: `<payload_b64>.<sig_b64>`. Payload contains issued-at ms. */
-export async function makeSessionCookie(): Promise<string> {
-  const secret = getSecret()
+export async function makeSessionCookie(secret: string): Promise<string> {
   if (!secret) throw new Error("ADMIN_PASSWORD (or ADMIN_SESSION_SECRET) is not set")
   const payload = JSON.stringify({ iat: Date.now() })
   const payloadB64 = b64urlEncode(new TextEncoder().encode(payload))
@@ -66,9 +56,11 @@ export async function makeSessionCookie(): Promise<string> {
   return `${payloadB64}.${sig}`
 }
 
-export async function verifySessionCookie(value: string | undefined | null): Promise<boolean> {
+export async function verifySessionCookie(
+  value: string | undefined | null,
+  secret: string,
+): Promise<boolean> {
   if (!value) return false
-  const secret = getSecret()
   if (!secret) return false
   const parts = value.split(".")
   if (parts.length !== 2) return false

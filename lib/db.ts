@@ -1,28 +1,17 @@
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless"
 
-/**
- * Neon serverless SQL client.
- * Uses the HTTP driver so it works in Edge and Node runtimes on Vercel.
- *
- * Requires env var: DATABASE_URL (Neon connection string)
- */
-type Sql = NeonQueryFunction<false, false>
+export type Sql = NeonQueryFunction<false, false>
 
-function getSql(): Sql {
-  const url = process.env.DATABASE_URL
-  if (!url) {
-    throw new Error(
-      "DATABASE_URL env var is not set. Add it in Vercel / .env.local (Neon connection string).",
-    )
-  }
-  return neon(url)
-}
+const clients = new Map<string, Sql>()
 
-// Lazy singleton so we don't try to construct on import when env is missing.
-let _sql: Sql | null = null
-export function sql(): Sql {
-  if (!_sql) _sql = getSql()
-  return _sql
+/** Return one Neon HTTP client per connection string for this isolate. */
+export function getSql(databaseUrl: string): Sql {
+  if (!databaseUrl) throw new Error("DATABASE_URL is not configured")
+  const existing = clients.get(databaseUrl)
+  if (existing) return existing
+  const client = neon(databaseUrl)
+  clients.set(databaseUrl, client)
+  return client
 }
 
 export type Review = {
@@ -30,29 +19,34 @@ export type Review = {
   title: string
   year: number | null
   poster_url: string | null
-  rating: number // 0..5, halves allowed
+  rating: number
   liked: boolean
   rewatch: boolean
   review: string | null
-  watched_on: string // ISO date (yyyy-mm-dd)
+  watched_on: string
   tags: string[]
   letterboxd_url: string | null
   tmdb_id: number | null
   created_at: string
 }
 
-export async function listReviews(limit = 100): Promise<Review[]> {
-  const s = sql()
-  const rows = (await s`
+type DatabaseReview = Omit<Review, "rating"> & { rating: number | string }
+
+function normalizeReview(row: DatabaseReview): Review {
+  return { ...row, rating: Number(row.rating) }
+}
+
+export async function listReviews(databaseUrl: string, limit = 100): Promise<Review[]> {
+  const sql = getSql(databaseUrl)
+  const rows = (await sql`
     SELECT id, title, year, poster_url, rating, liked, rewatch, review,
-           to_char(watched_on, 'YYYY-MM-DD') as watched_on,
-           tags, letterboxd_url, tmdb_id,
-           created_at
+           to_char(watched_on, 'YYYY-MM-DD') AS watched_on,
+           tags, letterboxd_url, tmdb_id, created_at
     FROM reviews
     ORDER BY watched_on DESC, created_at DESC
     LIMIT ${limit}
-  `) as unknown as Review[]
-  return rows
+  `) as unknown as DatabaseReview[]
+  return rows.map(normalizeReview)
 }
 
 export type NewReview = {
@@ -69,56 +63,45 @@ export type NewReview = {
   tmdb_id?: number | null
 }
 
-export async function createReview(r: NewReview): Promise<Review> {
-  const s = sql()
-  const rows = (await s`
+export type BatchInsertResult = {
+  created: Review[]
+  duplicateIndexes: number[]
+}
+
+/** Insert a validated review batch atomically, skipping exact URL conflicts. */
+export async function createReviews(
+  databaseUrl: string,
+  reviews: NewReview[],
+): Promise<BatchInsertResult> {
+  if (reviews.length === 0) return { created: [], duplicateIndexes: [] }
+  const sql = getSql(databaseUrl)
+  const queries = reviews.map((review) => sql`
     INSERT INTO reviews
       (title, year, poster_url, rating, liked, rewatch, review, watched_on, tags, letterboxd_url, tmdb_id)
     VALUES
-      (${r.title}, ${r.year ?? null}, ${r.poster_url ?? null}, ${r.rating},
-       ${r.liked ?? false}, ${r.rewatch ?? false}, ${r.review ?? null},
-       ${r.watched_on}, ${r.tags ?? []}, ${r.letterboxd_url ?? null}, ${r.tmdb_id ?? null})
+      (${review.title}, ${review.year ?? null}, ${review.poster_url ?? null}, ${review.rating},
+       ${review.liked ?? false}, ${review.rewatch ?? false}, ${review.review ?? null},
+       ${review.watched_on}, ${review.tags ?? []}, ${review.letterboxd_url ?? null},
+       ${review.tmdb_id ?? null})
+    ON CONFLICT (letterboxd_url) WHERE letterboxd_url IS NOT NULL DO NOTHING
     RETURNING id, title, year, poster_url, rating, liked, rewatch, review,
-              to_char(watched_on, 'YYYY-MM-DD') as watched_on,
+              to_char(watched_on, 'YYYY-MM-DD') AS watched_on,
               tags, letterboxd_url, tmdb_id, created_at
-  `) as unknown as Review[]
-  return rows[0]
+  `)
+  const resultSets = (await sql.transaction(queries)) as unknown as DatabaseReview[][]
+  const created: Review[] = []
+  const duplicateIndexes: number[] = []
+  resultSets.forEach((rows, index) => {
+    if (rows[0]) created.push(normalizeReview(rows[0]))
+    else duplicateIndexes.push(index)
+  })
+  return { created, duplicateIndexes }
 }
 
-export async function deleteReview(id: string): Promise<boolean> {
-  const s = sql()
-  const rows = (await s`DELETE FROM reviews WHERE id = ${id} RETURNING id`) as unknown as {
-    id: string
-  }[]
+export async function deleteReview(databaseUrl: string, id: string): Promise<boolean> {
+  const sql = getSql(databaseUrl)
+  const rows = (await sql`
+    DELETE FROM reviews WHERE id = ${id} RETURNING id
+  `) as unknown as { id: string }[]
   return rows.length > 0
-}
-
-/**
- * Idempotent schema initialization. Safe to run repeatedly.
- * Called on-demand from the admin endpoints so a fresh Neon DB just works.
- */
-let _initialized = false
-export async function ensureSchema() {
-  if (_initialized) return
-  const s = sql()
-  await s`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`
-  await s`
-    CREATE TABLE IF NOT EXISTS reviews (
-      id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      title          TEXT NOT NULL,
-      year           INTEGER,
-      poster_url     TEXT,
-      rating         NUMERIC(2,1) NOT NULL CHECK (rating >= 0 AND rating <= 5),
-      liked          BOOLEAN NOT NULL DEFAULT FALSE,
-      rewatch        BOOLEAN NOT NULL DEFAULT FALSE,
-      review         TEXT,
-      watched_on     DATE NOT NULL,
-      tags           TEXT[] NOT NULL DEFAULT '{}',
-      letterboxd_url TEXT,
-      tmdb_id        INTEGER,
-      created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `
-  await s`CREATE INDEX IF NOT EXISTS reviews_watched_on_idx ON reviews (watched_on DESC)`
-  _initialized = true
 }

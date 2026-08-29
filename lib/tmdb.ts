@@ -2,7 +2,7 @@
  * Minimal TMDB helper. Uses TMDB v3 API with an API key.
  * Free key: https://www.themoviedb.org/settings/api
  *
- * Requires env var: TMDB_API_KEY (v3 key, NOT the read-access token)
+ * The caller supplies a TMDB v3 API key (not the read-access token).
  */
 
 export type TmdbMovie = {
@@ -15,8 +15,11 @@ export type TmdbMovie = {
 
 const IMG_BASE = "https://image.tmdb.org/t/p/w300"
 
-export async function searchMovie(query: string, year?: number | null): Promise<TmdbMovie | null> {
-  const key = process.env.TMDB_API_KEY
+export async function searchMovie(
+  key: string | undefined,
+  query: string,
+  year?: number | null,
+): Promise<TmdbMovie | null> {
   if (!key) return null
 
   const params = new URLSearchParams({
