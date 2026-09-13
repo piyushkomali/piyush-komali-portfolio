@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     icon: "/images/piyush-komali.jpeg",
   },
   description:
-    "Computer Science student at Virginia Tech passionate about full-stack development and seeking internship opportunities.",
+    "Computer Science student at Virginia Tech passionate about AI product engineering and seeking new grad roles.",
 }
 
 export default function RootLayout({
