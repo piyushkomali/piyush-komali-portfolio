@@ -138,8 +138,6 @@ export default function Work() {
               ))}
             </div>
           </div>
-
-          <div className="h-24" />
         </SiteShell>
       </div>
     </main>
