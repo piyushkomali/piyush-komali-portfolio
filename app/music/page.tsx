@@ -9,7 +9,6 @@ export default function MusicPage() {
       <div className="pt-16">
         <SiteShell>
           <MusicSection />
-          <div className="h-24" />
         </SiteShell>
       </div>
     </main>
