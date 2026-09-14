@@ -90,7 +90,7 @@ export function HeroSection() {
         </div>
       </section>
       {/* Contact links */}
-      <nav aria-label="Social links" className="mt-10 flex flex-wrap gap-x-5 gap-y-2">
+      <nav aria-label="Social links" className="mt-7 flex flex-wrap gap-x-5 gap-y-2">
         <a href="https://github.com/piyushkomali" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide">github</a>
         <a href="https://www.linkedin.com/in/piyush-komali-53bb09240" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide">linkedin</a>
         <a href="mailto:komali.piyush@gmail.com" className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide">email</a>
