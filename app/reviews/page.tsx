@@ -9,7 +9,6 @@ export default function ReviewsPage() {
       <div className="pt-16">
         <SiteShell>
           <ReviewsSection />
-          <div className="h-24" />
         </SiteShell>
       </div>
     </main>
