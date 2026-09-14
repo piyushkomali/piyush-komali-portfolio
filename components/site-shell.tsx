@@ -21,7 +21,7 @@ const socialItems = [
 
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
-    <section className="min-h-screen flex items-flex justify-center px-8 lg:ml-30 sm:px-12 lg:px-16 pt-16 md:pt-12 pb-12">
+    <section className="min-h-screen flex items-start justify-center px-8 lg:ml-30 sm:px-12 lg:px-16 pt-16 md:pt-12 pb-12">
       <div className="max-w-2xl mx-auto w-full lg:-translate-x-4 xl:-translate-x-5">
         <div className="space-y-6 text-left">
           {/* Name */}
