@@ -14,8 +14,6 @@ export default function PostsPage() {
       <div className="pt-16">
         <SiteShell>
           <PostsList posts={posts} />
-
-          <div className="h-24" />
         </SiteShell>
       </div>
     </main>
