@@ -12,43 +12,16 @@ const navItems = [
   { label: "music", href: "/music" },
 ]
 
+const socialItems = [
+  { label: "github", href: "https://github.com/piyushkomali" },
+  { label: "linkedin", href: "https://www.linkedin.com/in/piyush-komali-53bb09240" },
+  { label: "email", href: "mailto:komali.piyush@gmail.com" },
+  { label: "twitter", href: "https://x.com/piyushkomali" },
+]
+
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
-    <section className="min-h-screen flex items-flex justify-center px-8 lg:ml-30 sm:px-12 lg:px-16 pt-16 md:pt-12">
-      {/* Contact links — top right */}
-      <div className="fixed top-6 right-8 z-40 hidden md:flex items-center gap-5">
-        <a
-          href="https://github.com/piyushkomali"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
-        >
-          github
-        </a>
-        <a
-          href="https://www.linkedin.com/in/piyush-komali-53bb09240"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
-        >
-          linkedin
-        </a>
-        <a
-          href="mailto:komali.piyush@gmail.com"
-          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
-        >
-          email
-        </a>
-        <a
-          href="https://x.com/piyushkomali"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
-        >
-          twitter
-        </a>
-      </div>
-
+    <section className="min-h-screen flex items-flex justify-center px-8 lg:ml-30 sm:px-12 lg:px-16 pt-16 md:pt-12 pb-12">
       <div className="max-w-2xl mx-auto w-full lg:-translate-x-4 xl:-translate-x-5">
         <div className="space-y-6 text-left">
           {/* Name */}
@@ -80,6 +53,31 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
           {/* Page-specific content */}
           <div className="mt-12">{children}</div>
+
+          {/* Contact links */}
+          <footer className="pt-8 mt-10 border-t border-white/10">
+            <p className="mb-4 text-xs font-medium tracking-[0.2em] text-gray-500 uppercase">
+              Connect
+            </p>
+            <nav aria-label="Social links" className="flex flex-wrap gap-2.5">
+              {socialItems.map((item) => {
+                const isExternal = item.href.startsWith("http")
+
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target={isExternal ? "_blank" : undefined}
+                    rel={isExternal ? "noopener noreferrer" : undefined}
+                    className="inline-flex min-h-11 items-center rounded-full border border-white/15 px-4 py-2 text-sm tracking-wide text-gray-300 transition-colors duration-150 hover:border-white/40 hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                    style={{ fontFamily: NAV_FONT }}
+                  >
+                    {item.label}
+                  </a>
+                )
+              })}
+            </nav>
+          </footer>
         </div>
       </div>
     </section>
