@@ -88,7 +88,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Contact links */}
+          {/* Homepage contact links */}
           <nav aria-label="Social links" className="mt-4 flex items-center gap-5">
             <a href="https://github.com/piyushkomali" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide">github</a>
             <a href="https://www.linkedin.com/in/piyush-komali-53bb09240" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide">linkedin</a>
