@@ -58,13 +58,18 @@ async function mapWithConcurrency<T, R>(
 ): Promise<R[]> {
   const results = new Array<R>(values.length)
   let nextIndex = 0
-  async function worker() {
+  async function worker(): Promise<void> {
     while (nextIndex < values.length) {
       const index = nextIndex++
       results[index] = await mapper(values[index], index)
     }
   }
-  await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, worker))
+
+  const workerCount = Math.min(concurrency, values.length)
+  // workerCount = 5 → [Promise, Promise, Promise, Promise, Promise]
+  const workerPromises = Array.from({ length: workerCount }, () => worker())
+  await Promise.all(workerPromises)
+
   return results
 }
 
@@ -125,7 +130,7 @@ export const onRequest: AppPagesFunction = async (context) => {
   try {
     body = await context.request.json()
   } catch {
-    return json({ error: { code: "invalid_body", message: "Invalid request body" } }, { status: 400 })
+    return json({ error: { code: "invalid_body", message: "Invalid request body type" } }, { status: 400 })
   }
   if (!Array.isArray(body.messages)) {
     return json({ error: { code: "invalid_messages", message: "messages must be an array" } }, { status: 400 })
@@ -147,7 +152,7 @@ FIELD RULES
 - liked is true only for an explicit heart/like indication.
 - rewatch is true only when explicitly marked as a rewatch.
 - tags are short lowercase strings.
-- preserve the user's review prose and voice; use an empty string when absent.
+- preserve the user's review prose and voice exactly; use an empty string when absent.
 - include letterboxd_url only when explicitly present.
 - never invent details.
 
