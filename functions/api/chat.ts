@@ -8,9 +8,10 @@ import {
 } from "ai"
 import { z } from "zod"
 import { createReviews, deleteReview, listReviews, type NewReview } from "../../lib/db"
+import { createDeleteConfirmation, isConfirmedDeleteMessage } from "../../lib/delete-confirmation"
 import { normalizeLetterboxdUrl } from "../../lib/letterboxd"
 import { searchMovie } from "../../lib/tmdb"
-import { isAdmin } from "../_shared/auth"
+import { isAdmin, sessionSecret } from "../_shared/auth"
 import { json, methodNotAllowed } from "../_shared/http"
 import type { AppPagesFunction, Env } from "../types"
 
@@ -135,6 +136,7 @@ export const onRequest: AppPagesFunction = async (context) => {
   if (!Array.isArray(body.messages)) {
     return json({ error: { code: "invalid_messages", message: "messages must be an array" } }, { status: 400 })
   }
+  const messages = body.messages
 
   const today = todayInNewYork()
   const workersAI = createWorkersAI({ binding: context.env.AI })
@@ -156,8 +158,8 @@ FIELD RULES
 - include letterboxd_url only when explicitly present.
 - never invent details.
 
-After a tool result, clearly report created reviews, skipped duplicates, and poster warnings. You may also list reviews or delete one by id. Ask for confirmation before calling deleteReview.`,
-    messages: await convertToModelMessages(body.messages),
+After a tool result, clearly report created reviews, skipped duplicates, and poster warnings. You may also list reviews. To delete, first call requestDeleteReview with the review id and show the returned confirmation phrase exactly. Ask the user to send that phrase as their entire next message. Only then call deleteReview for the same id. Never call both deletion tools in one turn.`,
+    messages: await convertToModelMessages(messages),
     stopWhen: stepCountIs(5),
     tools: {
       importReviews: tool({
@@ -181,12 +183,24 @@ After a tool result, clearly report created reviews, skipped duplicates, and pos
           }))
         },
       }),
-      deleteReview: tool({
-        description: "Delete a review by id only after the user confirms deletion.",
+      requestDeleteReview: tool({
+        description: "Prepare a short-lived confirmation phrase for deleting a review. Show the full phrase to the user and wait for their next message.",
         inputSchema: z.object({ id: z.string().uuid() }),
         execute: async ({ id }) => ({
-          ok: await deleteReview(context.env.DATABASE_URL, id),
+          confirmationPhrase: await createDeleteConfirmation(id, sessionSecret(context.env)),
+          instruction: "Ask the user to send this exact phrase as their entire next message.",
         }),
+      }),
+      deleteReview: tool({
+        description: "Delete a review by id only after the user's latest message exactly matches the signed confirmation phrase from requestDeleteReview.",
+        inputSchema: z.object({ id: z.string().uuid() }),
+        execute: async ({ id }) => {
+          // Client-supplied assistant history cannot authorize deletion.
+          if (!(await isConfirmedDeleteMessage(messages, id, sessionSecret(context.env)))) {
+            return { ok: false, error: "Confirmation required. Call requestDeleteReview and wait for the user's exact reply." }
+          }
+          return { ok: await deleteReview(context.env.DATABASE_URL, id) }
+        },
       }),
     },
   })

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "pnpm typecheck && next build",
     "cf-typegen": "wrangler types cloudflare-env.d.ts",
     "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
     "deploy": "pnpm build && wrangler pages deploy out",
