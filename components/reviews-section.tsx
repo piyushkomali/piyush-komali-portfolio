@@ -28,6 +28,7 @@ type DisplayReview = {
   rating: number
   snippet: string
   month: string
+  year: number
   day: number
 }
 
@@ -35,7 +36,6 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 function toDisplay(r: ApiReview): DisplayReview {
   const [y, m, d] = r.watched_on.split("-").map((n) => Number.parseInt(n, 10))
-  void y
   return {
     id: r.id,
     title: r.title,
@@ -43,6 +43,7 @@ function toDisplay(r: ApiReview): DisplayReview {
     rating: Number(r.rating),
     snippet: r.review || "",
     month: MONTHS[Math.max(0, Math.min(11, (m || 1) - 1))],
+    year: y,
     day: d || 1,
   }
 }
@@ -86,7 +87,7 @@ function PosterImage({ src, alt }: { src: string; alt: string }) {
 function DateMarker({ label, muted }: { label: string; muted: boolean }) {
   return (
     <div
-      className={`w-7 shrink-0 pt-1 text-[11px] leading-none tracking-wider uppercase text-right pr-1 ${
+      className={`w-14 shrink-0 pt-1 text-[11px] leading-none tracking-wider uppercase text-right pr-1 ${
         muted ? "text-[color:var(--muted-foreground)]" : "text-white font-bold"
       }`}
       style={{ fontFamily: INTER_FONT }}
@@ -122,14 +123,15 @@ export function ReviewsSection() {
     }
   }, [])
 
-  // Compute date markers: first entry per month gets month label, subsequent get day number.
+  // Compute date markers: first entry per month and year gets a period label, subsequent entries get a day number.
   const list = reviews ?? []
   const markers: { label: string; muted: boolean }[] = []
-  let currentMonth = ""
+  let currentPeriod = ""
   for (const r of list) {
-    if (r.month !== currentMonth) {
-      markers.push({ label: r.month, muted: false })
-      currentMonth = r.month
+    const period = `${r.month} ${r.year}`
+    if (period !== currentPeriod) {
+      markers.push({ label: period, muted: false })
+      currentPeriod = period
     } else {
       markers.push({ label: String(r.day), muted: true })
     }
