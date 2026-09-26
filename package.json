@@ -9,7 +9,8 @@
     "deploy": "pnpm build && wrangler pages deploy out",
     "dev": "next dev",
     "lint": "next lint",
-    "preview": "pnpm build && wrangler pages dev out",
+    "preview": "npx --yes wrangler@4.141.0 pages dev out",
+    "preview:build": "pnpm build && pnpm preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "start": "wrangler pages dev out"

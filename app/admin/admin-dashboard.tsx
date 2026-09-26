@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 import type { UIMessage } from "ai"
-import { useRouter } from "next/navigation"
 
 type ReviewRow = {
   id: string
@@ -35,7 +34,6 @@ function toolPartsOf(m: UIMessage) {
 }
 
 export function AdminDashboard() {
-  const router = useRouter()
   const { messages, sendMessage, status, error, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
   })
@@ -94,9 +92,8 @@ export function AdminDashboard() {
   }
 
   async function onLogout() {
-    await fetch("/api/admin/login", { method: "DELETE" })
-    router.replace("/admin/login")
-    router.refresh()
+    const response = await fetch("/api/admin/login", { method: "DELETE" })
+    if (response.ok) window.location.replace("/admin/login")
   }
 
   return (
@@ -174,9 +171,9 @@ Villeneuve delivers a masterclass in world-building. The sandworm riding sequenc
               rows={3}
               className="flex-1 resize-none rounded-md bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-white/30 font-mono"
               onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  onSend(e as unknown as React.FormEvent)
-                }
+                if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return
+                e.preventDefault()
+                e.currentTarget.form?.requestSubmit()
               }}
             />
             <div className="flex flex-col gap-2">
