@@ -1,16 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 export function LoginForm() {
   const router = useRouter()
-  const search = useSearchParams()
-  const requestedNext = search.get("next") || "/admin"
-  const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//")
-    ? requestedNext
-    : "/admin"
-
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -30,7 +24,7 @@ export function LoginForm() {
         setError(data.error || "Invalid password")
         return
       }
-      router.replace(next)
+      router.replace("/admin")
       router.refresh()
     } catch {
       setError("Network error")

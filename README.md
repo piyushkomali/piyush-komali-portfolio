@@ -10,7 +10,12 @@ the private review importer uses a native Cloudflare Workers AI binding.
 2. Create a Neon project and copy its pooled connection string.
 3. Create `.env.local` with `DATABASE_URL=...`, then run `pnpm db:migrate`.
 4. Copy `.dev.vars.example` to `.dev.vars` and fill in the Pages Function secrets.
-5. Run `pnpm cf-typegen`, then `pnpm preview` to test the complete Pages runtime.
+5. Run `pnpm cf-typegen`, then `pnpm preview:build` to build and test the complete Pages runtime.
+
+After the first build, use `pnpm preview` to start Pages Functions against the
+existing `out/` directory. Leave it running while editing Functions. Re-run
+`pnpm build` after editing Next.js pages or components; Wrangler will serve the
+updated static output without restarting.
 
 `pnpm dev` serves the static Next.js frontend only; API calls require the Wrangler
 preview command.
