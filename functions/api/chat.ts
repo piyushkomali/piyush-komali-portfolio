@@ -1,8 +1,10 @@
 import { createWorkersAI } from "workers-ai-provider"
 import {
   convertToModelMessages,
+  createUIMessageStreamResponse,
   stepCountIs,
   streamText,
+  toUIMessageStream,
   tool,
   type UIMessage,
 } from "ai"
@@ -205,5 +207,7 @@ After a tool result, clearly report created reviews, skipped duplicates, and pos
     },
   })
 
-  return result.toUIMessageStreamResponse()
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  })
 }

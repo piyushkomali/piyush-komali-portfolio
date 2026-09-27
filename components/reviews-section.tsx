@@ -70,14 +70,39 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
-function PosterImage({ src, alt }: { src: string; alt: string }) {
+function tmdbPosterVariants(src: string) {
+  try {
+    const url = new URL(src)
+    const match = url.pathname.match(/^\/t\/p\/(?:w\d+|original)\/(.+)$/)
+    if (url.protocol !== "https:" || url.hostname !== "image.tmdb.org" || !match) return null
+
+    const poster = (size: string) => `${url.origin}/t/p/${size}/${match[1]}${url.search}`
+    return { small: poster("w92"), medium: poster("w154"), large: poster("w185") }
+  } catch {
+    return null
+  }
+}
+
+function PosterImage({ src, alt, eager }: { src: string; alt: string; eager: boolean }) {
   const [broken, setBroken] = useState(false)
+  const variants = tmdbPosterVariants(src)
 
   return (
-    <div className="shrink-0 w-[34px] h-[50px] max-[480px]:w-[28px] max-[480px]:h-[42px] rounded-[3px] overflow-hidden bg-[color:var(--muted)] border border-[color:var(--border)]">
+    <div className="shrink-0 w-[60px] h-[90px] max-[480px]:w-[50px] max-[480px]:h-[75px] rounded-[3px] overflow-hidden bg-[color:var(--muted)] border border-[color:var(--border)]">
       {!broken && src && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} className="w-full h-full object-cover" onError={() => setBroken(true)} />
+        <img
+          src={variants?.medium ?? src}
+          srcSet={variants ? `${variants.small} 92w, ${variants.medium} 154w, ${variants.large} 185w` : undefined}
+          sizes={variants ? "(max-width: 480px) 50px, 60px" : undefined}
+          alt={alt}
+          width={60}
+          height={90}
+          loading={eager ? "eager" : "lazy"}
+          decoding="async"
+          className="w-full h-full object-cover"
+          onError={() => setBroken(true)}
+        />
       )}
     </div>
   )
@@ -104,7 +129,7 @@ export function ReviewsSection() {
     let cancelled = false
     async function load() {
       try {
-        const res = await fetch("/api/reviews", { cache: "no-store" })
+        const res = await fetch("/api/reviews")
         if (!res.ok) throw new Error("bad status")
         const data = (await res.json()) as { reviews: ApiReview[] }
         if (cancelled) return
@@ -169,7 +194,7 @@ export function ReviewsSection() {
 
                 <div className="flex-1 min-w-0">
                   <div className="group flex items-center gap-3 rounded-md border border-[color:var(--border)] bg-[color:var(--accent)] px-3 py-2 max-[480px]:px-2 max-[480px]:py-1.5 transition-colors duration-150 hover:border-[color:var(--muted-foreground)]">
-                    <PosterImage src={review.poster} alt={review.title} />
+                    <PosterImage src={review.poster} alt={review.title} eager={i < 5} />
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
