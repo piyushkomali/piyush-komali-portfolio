@@ -12,7 +12,7 @@ export async function handleReviewsRequest(
     const reviews = await loadReviews(databaseUrl, 200)
     return json(
       { reviews },
-      { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } },
+      { headers: { "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300" } },
     )
   } catch {
     console.error("reviews_unavailable")

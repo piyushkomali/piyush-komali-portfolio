@@ -20,6 +20,9 @@ describe("public reviews function", () => {
     )
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ reviews: [] })
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
+    )
   })
 
   it("returns a stable 503 without leaking database details", async () => {
@@ -30,6 +33,7 @@ describe("public reviews function", () => {
       vi.fn().mockRejectedValue(new Error("secret connection details")),
     )
     expect(response.status).toBe(503)
+    expect(response.headers.get("Cache-Control")).toBe("no-store")
     expect(await response.json()).toEqual({
       reviews: [],
       error: {
