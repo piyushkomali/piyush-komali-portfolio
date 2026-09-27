@@ -79,6 +79,7 @@ export function PostView({
   )
   const [mounted, setMounted] = useState(false)
   const articleRef = useRef<HTMLElement | null>(null)
+  const desktopTocRef = useRef<HTMLDetailsElement | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -151,9 +152,44 @@ export function PostView({
             <div className="mb-5">
               <Breadcrumb category={meta.category} />
             </div>
-            <nav>
-              <TocList toc={toc} activeId={activeId} />
-            </nav>
+            {toc.length > 0 && (
+              <details
+                ref={desktopTocRef}
+                className="group rounded border border-white/10 bg-[#1B1812]"
+                onPointerEnter={(event) => {
+                  if (event.pointerType === "mouse" && desktopTocRef.current) {
+                    desktopTocRef.current.open = true
+                  }
+                }}
+                onPointerLeave={(event) => {
+                  if (
+                    event.pointerType === "mouse" &&
+                    desktopTocRef.current &&
+                    !desktopTocRef.current.contains(document.activeElement)
+                  ) {
+                    desktopTocRef.current.open = false
+                  }
+                }}
+                onBlur={(event) => {
+                  if (
+                    desktopTocRef.current &&
+                    !desktopTocRef.current.contains(event.relatedTarget)
+                  ) {
+                    desktopTocRef.current.open = false
+                  }
+                }}
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-xs text-gray-400 transition-colors hover:text-gray-200 select-none">
+                  contents
+                  <span aria-hidden="true" className="text-sm leading-none transition-transform group-open:rotate-180">
+                    ↓
+                  </span>
+                </summary>
+                <nav aria-label="Post sections" className="px-3 pb-3 pt-1">
+                  <TocList toc={toc} activeId={activeId} />
+                </nav>
+              </details>
+            )}
           </aside>,
           document.body,
         )}
