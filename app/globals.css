@@ -5,7 +5,7 @@
 
 :root {
   /* Black and white minimal theme */
-  --background: #141414; /* Dark gray background */
+  --background: #14120c; /* Pure black background */
   --foreground: #ffffff; /* Pure white text */
   --card: #111111;
   --card-foreground: #ffffff;
@@ -41,8 +41,8 @@
 }
 
 .dark {
-  /* Dark theme - same background as root */
-  --background: #141414;
+  /* Dark theme - same as root since we're using black background globally */
+  --background: #14120c;
   --foreground: #ffffff;
   --card: #111111;
   --card-foreground: #ffffff;
