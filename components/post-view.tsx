@@ -145,15 +145,22 @@ export function PostView({
               // Article left edge is at `50% - 21rem - 1.25rem`.
               // Push TOC so it ends 3.5rem before the article.
               right: "calc(50% + 21rem + 1.25rem + 3.5rem)",
-              width: "10.5rem",
+              // A little wider so the boxed list retains the same readable
+              // line length after its inner padding is added.
+              width: "12.5rem",
             }}
           >
             <div className="mb-5">
               <Breadcrumb category={meta.category} />
             </div>
-            <nav>
-              <TocList toc={toc} activeId={activeId} />
-            </nav>
+            {toc.length > 0 && (
+              <nav
+                className="max-h-[calc(100vh-14rem)] overflow-y-auto rounded-[4px] border p-[15px]"
+                style={{ backgroundColor: "#1B1812", borderColor: "#211d16" }}
+              >
+                <TocList toc={toc} activeId={activeId} />
+              </nav>
+            )}
           </aside>,
           document.body,
         )}
