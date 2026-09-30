@@ -125,6 +125,12 @@
     @apply bg-background text-foreground font-sans;
   }
 
+  html,
+  body {
+    /* Disable vertical edge bounce while preserving horizontal navigation. */
+    overscroll-behavior-y: none;
+  }
+
   html {
     scroll-behavior: smooth;
     /* Reserve space for the scrollbar so pages don't shift horizontally
