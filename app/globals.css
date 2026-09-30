@@ -125,6 +125,12 @@
     @apply bg-background text-foreground font-sans;
   }
 
+  html,
+  body {
+    /* Disable edge bounce while allowing content to scroll normally. */
+    overscroll-behavior: none;
+  }
+
   html {
     scroll-behavior: smooth;
     /* Reserve space for the scrollbar so pages don't shift horizontally
