@@ -127,8 +127,8 @@
 
   html,
   body {
-    /* Disable edge bounce while allowing content to scroll normally. */
-    overscroll-behavior: none;
+    /* Disable vertical edge bounce while preserving horizontal navigation. */
+    overscroll-behavior-y: none;
   }
 
   html {
