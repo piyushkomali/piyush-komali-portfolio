@@ -12,7 +12,7 @@ import { z } from "zod"
 import { createReviews, deleteReview, listReviews, type NewReview } from "../../lib/db"
 import { createDeleteConfirmation, isConfirmedDeleteMessage } from "../../lib/delete-confirmation"
 import { normalizeLetterboxdUrl } from "../../lib/letterboxd"
-import { isTmdbMovieMatch, searchMovie } from "../../lib/tmdb"
+import { searchMovie } from "../../lib/tmdb"
 import { isAdmin, sessionSecret } from "../_shared/auth"
 import { json, methodNotAllowed } from "../_shared/http"
 import type { AppPagesFunction, Env } from "../types"
@@ -101,26 +101,15 @@ async function importReviews(env: Env, reviews: ParsedReview[]) {
   const warnings: string[] = []
   const enriched = await mapWithConcurrency(unique, 5, async (review) => {
     const hit = await searchMovie(env.TMDB_API_KEY, review.title, review.year ?? null)
-    const confirmedHit = hit && isTmdbMovieMatch(review.title, review.year, hit) ? hit : null
-
-    if (!hit) {
-      warnings.push(`No TMDB poster match for ${review.title}`)
-    } else if (!confirmedHit) {
-      const sourceYear = review.year ? ` (${review.year})` : ""
-      const hitYear = hit.year ? ` (${hit.year})` : ""
-      warnings.push(
-        `TMDB match for ${review.title}${sourceYear} was uncertain: ${hit.title}${hitYear}. Kept the pasted title/year and skipped TMDB metadata.`,
-      )
-    }
+    if (!hit) warnings.push(`No TMDB poster match for ${review.title}`)
 
     return {
       ...review,
-      // The pasted Letterboxd identity is authoritative. TMDB only enriches a
-      // confirmed title/year match with external metadata.
+      // Letterboxd is the source of truth for movie identity. TMDB is enrichment only.
       title: review.title,
       year: review.year ?? null,
-      poster_url: confirmedHit?.poster_url ?? null,
-      tmdb_id: confirmedHit?.id ?? null,
+      poster_url: hit?.poster_url ?? null,
+      tmdb_id: hit?.id ?? null,
     } satisfies NewReview
   })
 
