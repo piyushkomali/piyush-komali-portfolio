@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 import type { UIMessage } from "ai"
@@ -33,6 +33,25 @@ function toolPartsOf(m: UIMessage) {
   return m.parts.filter((p) => p.type.startsWith("tool-"))
 }
 
+function completedReviewMutationKey(messages: UIMessage[]): string | null {
+  for (let messageIndex = messages.length - 1; messageIndex >= 0; messageIndex--) {
+    const message = messages[messageIndex]
+    for (let partIndex = message.parts.length - 1; partIndex >= 0; partIndex--) {
+      const part = message.parts[partIndex]
+      if (part.type !== "tool-importReviews" && part.type !== "tool-deleteReview") continue
+
+      const state = "state" in part && typeof part.state === "string" ? part.state : ""
+      if (!state.startsWith("output-")) continue
+
+      const toolCallId = "toolCallId" in part && typeof part.toolCallId === "string"
+        ? part.toolCallId
+        : `${message.id}:${partIndex}`
+      return `${part.type}:${toolCallId}:${state}`
+    }
+  }
+  return null
+}
+
 export function AdminDashboard() {
   const { messages, sendMessage, status, error, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: "/api/chat" }),
@@ -42,6 +61,7 @@ export function AdminDashboard() {
   const [reviews, setReviews] = useState<ReviewRow[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [reviewsError, setReviewsError] = useState<string | null>(null)
+  const lastRefreshedMutation = useRef<string | null>(null)
 
   const loadReviews = useCallback(async () => {
     setReviewsLoading(true)
@@ -66,13 +86,16 @@ export function AdminDashboard() {
     loadReviews()
   }, [loadReviews])
 
-  // When the AI stream finishes (status back to 'ready') and we have any tool
-  // parts, refresh the review list.
+  // Refresh once for each completed import/delete tool call. Historical tool
+  // activity must not make later conversational replies reload the list again.
   useEffect(() => {
-    if (status === "ready" && messages.length > 0) {
-      const hasToolActivity = messages.some((m) => toolPartsOf(m).length > 0)
-      if (hasToolActivity) loadReviews()
-    }
+    if (status !== "ready") return
+
+    const mutationKey = completedReviewMutationKey(messages)
+    if (!mutationKey || mutationKey === lastRefreshedMutation.current) return
+
+    lastRefreshedMutation.current = mutationKey
+    loadReviews()
   }, [status, messages, loadReviews])
 
   async function onSend(e: React.FormEvent) {
