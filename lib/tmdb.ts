@@ -15,6 +15,27 @@ export type TmdbMovie = {
 
 const IMG_BASE = "https://image.tmdb.org/t/p/w300"
 
+function normalizeMovieTitle(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ")
+}
+
+export function isTmdbMovieMatch(
+  sourceTitle: string,
+  sourceYear: number | null | undefined,
+  hit: TmdbMovie,
+): boolean {
+  if (normalizeMovieTitle(sourceTitle) !== normalizeMovieTitle(hit.title)) return false
+  if (sourceYear != null && hit.year !== sourceYear) return false
+  return true
+}
+
 export async function searchMovie(
   key: string | undefined,
   query: string,
@@ -32,10 +53,9 @@ export async function searchMovie(
   if (year) params.set("year", String(year))
 
   try {
-    const res = await fetch(`https://api.themoviedb.org/3/search/movie?${params.toString()}`, {
-      // Server-side, revalidate frequently — posters basically never change per movie.
-      next: { revalidate: 60 * 60 * 24 },
-    })
+    // This helper runs in a Cloudflare Pages Function, not the Next.js server
+    // runtime. Avoid Next-only fetch options such as `next.revalidate` here.
+    const res = await fetch(`https://api.themoviedb.org/3/search/movie?${params.toString()}`)
     if (!res.ok) return null
     const data = (await res.json()) as {
       results?: Array<{
