@@ -9,7 +9,7 @@ import {
   type UIMessage,
 } from "ai"
 import { z } from "zod"
-import { createReviews, deleteReview, listReviews, type NewReview } from "../../lib/db"
+import { createReviewRepository, type NewReview, type ReviewRepository } from "../../lib/db"
 import { createDeleteConfirmation, isConfirmedDeleteMessage } from "../../lib/delete-confirmation"
 import { normalizeLetterboxdUrl } from "../../lib/letterboxd"
 import { searchMovie } from "../../lib/tmdb"
@@ -76,7 +76,7 @@ async function mapWithConcurrency<T, R>(
   return results
 }
 
-async function importReviews(env: Env, reviews: ParsedReview[]) {
+async function importReviews(env: Env, reviewRepository: ReviewRepository, reviews: ParsedReview[]) {
   // Normalize the complete batch before any external lookup or database write.
   const normalized = reviews.map((review) => ({
     ...review,
@@ -111,7 +111,7 @@ async function importReviews(env: Env, reviews: ParsedReview[]) {
     } satisfies NewReview
   })
 
-  const result = await createReviews(env.DATABASE_URL, enriched)
+  const result = await reviewRepository.createReviews(enriched)
   const databaseDuplicates = result.duplicateIndexes.map((index) => enriched[index])
   return {
     created: result.created.map((review) => ({ id: review.id, title: review.title })),
@@ -139,6 +139,7 @@ export const onRequest: AppPagesFunction = async (context) => {
     return json({ error: { code: "invalid_messages", message: "messages must be an array" } }, { status: 400 })
   }
   const messages = body.messages
+  const reviewRepository = createReviewRepository(context.env.DATABASE_URL)
 
   const today = todayInNewYork()
   const workersAI = createWorkersAI({ binding: context.env.AI })
@@ -172,14 +173,14 @@ After a tool result, clearly report created reviews, skipped duplicates, and pos
             return { error: "Only one importReviews call is allowed per user message" }
           }
           importCalled = true
-          return importReviews(context.env, reviews)
+          return importReviews(context.env, reviewRepository, reviews)
         },
       }),
       listReviews: tool({
         description: "List existing reviews, most recent first.",
         inputSchema: z.object({ limit: z.number().int().min(1).max(50).default(20) }),
         execute: async ({ limit }) => {
-          const rows = await listReviews(context.env.DATABASE_URL, limit)
+          const rows = await reviewRepository.listReviews(limit)
           return rows.map(({ id, title, year, rating, watched_on }) => ({
             id, title, year, rating, watched_on,
           }))
@@ -201,7 +202,7 @@ After a tool result, clearly report created reviews, skipped duplicates, and pos
           if (!(await isConfirmedDeleteMessage(messages, id, sessionSecret(context.env)))) {
             return { ok: false, error: "Confirmation required. Call requestDeleteReview and wait for the user's exact reply." }
           }
-          return { ok: await deleteReview(context.env.DATABASE_URL, id) }
+          return { ok: await reviewRepository.deleteReview(id) }
         },
       }),
     },

@@ -1,15 +1,14 @@
-import { listReviews } from "../../lib/db"
+import { createReviewRepository, type ReviewRepository } from "../../lib/db"
 import { json, methodNotAllowed } from "../_shared/http"
 import type { AppPagesFunction } from "../types"
 
 export async function handleReviewsRequest(
   request: Request,
-  databaseUrl: string,
-  loadReviews: typeof listReviews = listReviews,
+  reviewRepository: Pick<ReviewRepository, "listReviews">,
 ): Promise<Response> {
   if (request.method !== "GET") return methodNotAllowed(["GET"])
   try {
-    const reviews = await loadReviews(databaseUrl, 200)
+    const reviews = await reviewRepository.listReviews(200)
     return json(
       { reviews },
       { headers: { "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300" } },
@@ -27,4 +26,4 @@ export async function handleReviewsRequest(
 }
 
 export const onRequest: AppPagesFunction = (context) =>
-  handleReviewsRequest(context.request, context.env.DATABASE_URL)
+  handleReviewsRequest(context.request, createReviewRepository(context.env.DATABASE_URL))
