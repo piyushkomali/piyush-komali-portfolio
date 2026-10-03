@@ -36,8 +36,7 @@ function normalizeReview(row: DatabaseReview): Review {
   return { ...row, rating: Number(row.rating) }
 }
 
-export async function listReviews(databaseUrl: string, limit = 100): Promise<Review[]> {
-  const sql = getSql(databaseUrl)
+async function listReviews(sql: Sql, limit = 100): Promise<Review[]> {
   const rows = (await sql`
     SELECT id, title, year, poster_url, rating, liked, rewatch, review,
            to_char(watched_on, 'YYYY-MM-DD') AS watched_on,
@@ -68,13 +67,15 @@ export type BatchInsertResult = {
   duplicateIndexes: number[]
 }
 
+export interface ReviewRepository {
+  listReviews(limit?: number): Promise<Review[]>
+  createReviews(reviews: NewReview[]): Promise<BatchInsertResult>
+  deleteReview(id: string): Promise<boolean>
+}
+
 /** Insert a validated review batch atomically, skipping exact URL conflicts. */
-export async function createReviews(
-  databaseUrl: string,
-  reviews: NewReview[],
-): Promise<BatchInsertResult> {
+async function createBatchReviews(sql: Sql, reviews: NewReview[]): Promise<BatchInsertResult> {
   if (reviews.length === 0) return { created: [], duplicateIndexes: [] }
-  const sql = getSql(databaseUrl)
   const queries = reviews.map((review) => sql`
     INSERT INTO reviews
       (title, year, poster_url, rating, liked, rewatch, review, watched_on, tags, letterboxd_url, tmdb_id)
@@ -98,10 +99,32 @@ export async function createReviews(
   return { created, duplicateIndexes }
 }
 
-export async function deleteReview(databaseUrl: string, id: string): Promise<boolean> {
-  const sql = getSql(databaseUrl)
+async function deleteReview(sql: Sql, id: string): Promise<boolean> {
   const rows = (await sql`
     DELETE FROM reviews WHERE id = ${id} RETURNING id
   `) as unknown as { id: string }[]
   return rows.length > 0
+}
+
+export function createReviewRepository(databaseUrl: string): ReviewRepository {
+  let sql: Sql | undefined
+  function requestSql(): Sql {
+    if (!sql) sql = getSql(databaseUrl)
+    return sql
+  }
+
+  return {
+    listReviews(limit = 100): Promise<Review[]> {
+      return listReviews(requestSql(), limit)
+    },
+
+    createReviews(reviews: NewReview[]): Promise<BatchInsertResult> {
+      if (reviews.length === 0) return Promise.resolve({ created: [], duplicateIndexes: [] })
+      return createBatchReviews(requestSql(), reviews)
+    },
+
+    deleteReview(id: string): Promise<boolean> {
+      return deleteReview(requestSql(), id)
+    },
+  }
 }
