@@ -2,12 +2,14 @@
 
 # dependencies
 /node_modules
+.DS_Store
 
 /.cursor/rules/portfolio-rules.mdc
 
 # next.js
 /.next/
 /out/
+/.wrangler/
 
 # production
 /build
@@ -20,6 +22,8 @@ yarn-error.log*
 
 # env files
 .env*
+.dev.vars*
+!.dev.vars.example
 
 # vercel
 .vercel
