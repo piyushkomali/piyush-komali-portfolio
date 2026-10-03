@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import { makeSessionCookie } from "@/lib/auth"
 
 import { handleReviewsRequest } from "@/functions/api/reviews"
+import { createReviewRepository } from "@/lib/db"
 import { onRequest as protectAdmin } from "@/functions/admin/[[path]]"
 
 const env = {
@@ -15,8 +16,7 @@ describe("public reviews function", () => {
   it("returns a successful empty collection", async () => {
     const response = await handleReviewsRequest(
       new Request("https://example.com/api/reviews"),
-      env.DATABASE_URL,
-      vi.fn().mockResolvedValue([]),
+      { listReviews: vi.fn().mockResolvedValue([]) },
     )
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ reviews: [] })
@@ -29,8 +29,7 @@ describe("public reviews function", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined)
     const response = await handleReviewsRequest(
       new Request("https://example.com/api/reviews"),
-      env.DATABASE_URL,
-      vi.fn().mockRejectedValue(new Error("secret connection details")),
+      { listReviews: vi.fn().mockRejectedValue(new Error("secret connection details")) },
     )
     expect(response.status).toBe(503)
     expect(response.headers.get("Cache-Control")).toBe("no-store")
@@ -41,6 +40,15 @@ describe("public reviews function", () => {
         message: "Reviews are temporarily unavailable",
       },
     })
+  })
+
+  it("returns 503 when the database URL is missing", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined)
+    const response = await handleReviewsRequest(
+      new Request("https://example.com/api/reviews"),
+      createReviewRepository(""),
+    )
+    expect(response.status).toBe(503)
   })
 })
 

@@ -1,22 +1,23 @@
 import { randomUUID } from "node:crypto"
 import { afterAll, describe, expect, it } from "vitest"
-import { createReviews, deleteReview, getSql } from "@/lib/db"
+import { createReviewRepository, getSql } from "@/lib/db"
 
 const databaseUrl = process.env.TEST_DATABASE_URL
 const integration = databaseUrl ? describe : describe.skip
 const createdIds: string[] = []
+const reviewRepository = databaseUrl ? createReviewRepository(databaseUrl) : null
 
 integration("Neon review writes", () => {
   afterAll(async () => {
     if (!databaseUrl) return
-    await Promise.all(createdIds.map((id) => deleteReview(databaseUrl, id)))
+    await Promise.all(createdIds.map((id) => reviewRepository!.deleteReview(id)))
   })
 
   it("skips an exact URL but keeps numbered reviews distinct", async () => {
     const token = randomUUID()
     const base = `https://letterboxd.com/test/film/${token}/`
     const common = { title: token, rating: 4, watched_on: "2026-08-29" }
-    const first = await createReviews(databaseUrl!, [
+    const first = await reviewRepository!.createReviews([
       { ...common, letterboxd_url: base },
       { ...common, letterboxd_url: `${base}1/` },
       { ...common, letterboxd_url: `${base}2/` },
@@ -24,13 +25,13 @@ integration("Neon review writes", () => {
     createdIds.push(...first.created.map((review) => review.id))
     expect(first.created).toHaveLength(3)
 
-    const duplicate = await createReviews(databaseUrl!, [{ ...common, letterboxd_url: base }])
+    const duplicate = await reviewRepository!.createReviews([{ ...common, letterboxd_url: base }])
     expect(duplicate.created).toHaveLength(0)
     expect(duplicate.duplicateIndexes).toEqual([0])
   })
 
   it("allows multiple rows without Letterboxd URLs", async () => {
-    const rows = await createReviews(databaseUrl!, [
+    const rows = await reviewRepository!.createReviews([
       { title: randomUUID(), rating: 3, watched_on: "2026-08-29" },
       { title: randomUUID(), rating: 3, watched_on: "2026-08-29" },
     ])
@@ -42,7 +43,7 @@ integration("Neon review writes", () => {
     const token = randomUUID()
     const url = `https://letterboxd.com/test/film/${token}/`
     await expect(
-      createReviews(databaseUrl!, [
+      reviewRepository!.createReviews([
         { title: token, rating: 4, watched_on: "2026-08-29", letterboxd_url: url },
         { title: "invalid", rating: 9, watched_on: "2026-08-29" },
       ]),
