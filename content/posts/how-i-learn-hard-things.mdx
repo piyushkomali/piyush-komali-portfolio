@@ -1,0 +1,20 @@
+export const meta = {
+  slug: "how-i-learn-hard-things",
+  title: "How I Learn Hard Things",
+  date: "Coming soon",
+  readingTime: "1 min read",
+  category: "Writing",
+  excerpt: "A few notes on understanding the problem before the solution.",
+}
+
+export const toc = [
+  { id: "abstract-thoughts", title: "Abstract thoughts", level: 2 },
+]
+
+## Abstract thoughts
+
+Understand the problem before the polished solution. The naive version; every new token checking every earlier key for context. What makes that slow? Why isn't it enough? What does the better approach change? One step back from the finished artifact; the problem gets clearer, and the solution has a reason to exist.
+
+Recently: [Mistral Large 4](https://mistral.ai/news/mistral-large-4/)—1.05T total parameters, 49B active; a mixture-of-experts model. The rabbit hole: what happens after a token comes in? Not the neural-net math first; the pipeline, in plain language, and what each stage makes possible.
+
+Attention: a token's vector as a query; earlier tokens' keys and values in the KV cache; context gathered before the feed-forward stage. The baseline: search every key. MLA, gated MLA, sparse attention—different ways to reduce what is stored or searched. Which problem does each solve? What context reaches the next stage?
