@@ -28,8 +28,8 @@ preview command.
 - Project name in `wrangler.jsonc`: `piyush-komali-portfolio` (change it if the
   existing Pages project uses a different name).
 - Build command: `sh scripts/build-pages.sh`
-- Set `BUN_VERSION=1.4.2` for Pages’ initial tool detection and
-  `SKIP_DEPENDENCY_INSTALL=1` so the explicit frozen Bun install controls dependencies.
+- `wrangler.jsonc` sets `BUN_VERSION=1.4.2` for Pages’ initial tool detection
+  and `SKIP_DEPENDENCY_INSTALL=1` so the explicit frozen Bun install controls dependencies.
   The build command bootstraps the pinned checker, since stable Bun 1.4.2 lacks it.
   The script also verifies the production Pages Functions bundle with Wrangler.
   Do not put this npm-only canary version in `packageManager` or `BUN_VERSION`:
