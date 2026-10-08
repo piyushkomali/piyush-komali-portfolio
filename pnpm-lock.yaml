@@ -198,6 +198,9 @@ importers:
       '@types/react-dom':
         specifier: ^18
         version: 18.0.0
+      bun:
+        specifier: 1.4.2-canary.20261008.1
+        version: 1.4.2-canary.20261008.1
       postcss:
         specifier: ^8.5
         version: 8.5.0
@@ -755,6 +758,66 @@ packages:
   '@next/swc-win32-x64-msvc@14.2.16':
     resolution: {integrity: sha512-OA7NtfxgirCjfqt+02BqxC3MIgM/JaGjw9tOe4fyZgPsqfseNiMPnCRP44Pfs+Gpo9zPN+SXaFsgP6vk8d571A==}
     engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@oven/bun-darwin-aarch64@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-D8e7heZpHclQZZNGLIIduQ7m1EzSrlS9etBUiI1fG/TM8XqyNjP3ZvtqsnqpEzEjkOW8uBL0Rjef7zPSUBJZLw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@oven/bun-darwin-x64@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-Id/PZ1qiSx1xUxU/bWOjUhYf9E8nDqhDjALQcf1eihRCMme1aC671Vstc2kNpwvOHsA1Rpr5X02c18yXGHE8yQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oven/bun-freebsd-aarch64@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-5wPWlHtXe4QAGjDCyNmVSN1r/AgxFZFAdGYt3uGgJ7wEdAwW/8pFwBsGluuhIbpLf4h/YtmVAQYO6tT8apu5GA==}
+    cpu: [arm64]
+    os: [freebsd]
+
+  '@oven/bun-freebsd-x64@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-dlRJDEiqmDfO1j59yu2cixk7ELEcq+jjzFdCEklWF6cHbQ1fLxmN4l8frqWPvEpGtX43DXCwTdeDp/NLL5i/xw==}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@oven/bun-linux-aarch64-android@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-/R09ID6zRFEE2piw930b2Cu9tgQgCMT6AZuOXW6ONVK+PltNy3Vb8DU+3elZMKkeN4PimnBKQF2CkrktSEO9rA==}
+    cpu: [arm64]
+    os: [android]
+
+  '@oven/bun-linux-aarch64-musl@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-Yn3jGtIh0jLOvDZkWAtkes+4MHitce2FSvxoJDGT+BrG3ikEgBWaFw2mNgaFt9t3n4tCijdqG7+A46ULrkwRLg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oven/bun-linux-aarch64@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-mxhgczG6odfKgpE0szfTiju/udQFsnLgQbSukZY1/cn49cCrWCNueZUoWKkd0VVc9lWQWDDoLp6StluaEN265g==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-android@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-By7PSFR5gFOFH0t0Kv2hHgpu2KXpqP0toqBDS/bBLpGyham9zynKUeUYeZOokMoD0ByVgBGZblwuiPyUxnxdvA==}
+    cpu: [x64]
+    os: [android]
+
+  '@oven/bun-linux-x64-musl@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-jRXcaG2ne0o+LDWpvcu0KGIVt+79fuGATyWijWrTccU3a3diC/zuLMKWcB/Y4d2UkJKhRJUO6e1GPXnWZ68HPw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-vWRJ6F75SSAVSr6mtNDBI83wVc7Nv0410R2lSA+FedBkTfy6TO67Nx6aHIolbOZRjt1rs1m5x+Sk+kW1m8YvZA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-windows-aarch64@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-KcvNeGdL5hxIOgQMVyaJqHUfXHocRZJqmW41RHL6rxPZUx8twFOR9fodVuTy/nFE0wdRfOFzpGX6DAaOD46kPA==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@oven/bun-windows-x64@1.4.2-canary.20261008.1':
+    resolution: {integrity: sha512-svvpxTXiOYEQ74FuLW471wB04/CHWt7eQcUrCyN8wlJ7LSCuViCsFDXDRUpAVhKegX4vbbiSBHF4+RzUB7rolw==}
     cpu: [x64]
     os: [win32]
 
@@ -1814,6 +1877,12 @@ packages:
   browserslist@4.26.2:
     resolution: {integrity: sha512-ECFzp6uFOSB+dcZ5BK/IBaGWssbSYBHvuMeMt3MMFyhI0Z8SqGgEkBLARgpRH3hutIgPVsALcMwbDrJqPxQ65A==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
+    hasBin: true
+
+  bun@1.4.2-canary.20261008.1:
+    resolution: {integrity: sha512-ZZLYvttC6J7TolylvUWNOwE7ObTCGxdHe8NNmVlVs8OLhAJInNJ8GJQHgi32O6x+zAnaLXH2awIJSLtgaYpJdg==}
+    cpu: [arm64, x64]
+    os: [darwin, linux, android, freebsd, win32]
     hasBin: true
 
   busboy@1.6.0:
@@ -3447,6 +3516,42 @@ snapshots:
   '@next/swc-win32-x64-msvc@14.2.16':
     optional: true
 
+  '@oven/bun-darwin-aarch64@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-darwin-x64@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-freebsd-aarch64@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-freebsd-x64@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-linux-aarch64-android@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-linux-aarch64-musl@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-linux-aarch64@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-linux-x64-android@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-linux-x64-musl@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-linux-x64@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-windows-aarch64@1.4.2-canary.20261008.1':
+    optional: true
+
+  '@oven/bun-windows-x64@1.4.2-canary.20261008.1':
+    optional: true
+
   '@oxc-project/types@0.147.0': {}
 
   '@poppinss/colors@4.1.6':
@@ -4456,6 +4561,21 @@ snapshots:
       electron-to-chromium: 1.5.221
       node-releases: 2.0.21
       update-browserslist-db: 1.1.3(browserslist@4.26.2)
+
+  bun@1.4.2-canary.20261008.1:
+    optionalDependencies:
+      '@oven/bun-darwin-aarch64': 1.4.2-canary.20261008.1
+      '@oven/bun-darwin-x64': 1.4.2-canary.20261008.1
+      '@oven/bun-freebsd-aarch64': 1.4.2-canary.20261008.1
+      '@oven/bun-freebsd-x64': 1.4.2-canary.20261008.1
+      '@oven/bun-linux-aarch64': 1.4.2-canary.20261008.1
+      '@oven/bun-linux-aarch64-android': 1.4.2-canary.20261008.1
+      '@oven/bun-linux-aarch64-musl': 1.4.2-canary.20261008.1
+      '@oven/bun-linux-x64': 1.4.2-canary.20261008.1
+      '@oven/bun-linux-x64-android': 1.4.2-canary.20261008.1
+      '@oven/bun-linux-x64-musl': 1.4.2-canary.20261008.1
+      '@oven/bun-windows-aarch64': 1.4.2-canary.20261008.1
+      '@oven/bun-windows-x64': 1.4.2-canary.20261008.1
 
   busboy@1.6.0:
     dependencies:

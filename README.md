@@ -36,6 +36,15 @@ as new files in `db/migrations`; do not edit an already-applied migration.
 
 ## Validation
 
+`pnpm typecheck` runs Bun's native `bun check` against `tsconfig.json`.
+The Bun CLI is pinned as a development dependency to
+`1.4.2-canary.20261008.1` (runtime revision `1.4.3-canary.1+620b50f6a`),
+because stable Bun 1.4.2 does not yet include the checker. Install development
+dependencies on build runners, including Cloudflare Pages; `pnpm build` runs
+this check before Next.js. TypeScript stays installed for Next.js and editor
+support. Node, React, and MDX ambient types are listed explicitly for the new
+checker, and CSS imports have a declaration in `types/assets.d.ts`.
+
 ```sh
 pnpm test
 pnpm typecheck

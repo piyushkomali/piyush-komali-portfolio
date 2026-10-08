@@ -12,7 +12,7 @@
     "preview": "npx --yes wrangler@4.141.0 pages dev out",
     "preview:build": "pnpm build && pnpm preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun check",
     "start": "wrangler pages dev out"
   },
   "dependencies": {
@@ -81,6 +81,7 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "bun": "1.4.2-canary.20261008.1",
     "postcss": "^8.5",
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",
@@ -89,5 +90,10 @@
     "typescript": "^5",
     "vitest": "^4.1.11",
     "wrangler": "^4.127.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "bun"
+    ]
   }
 }
