@@ -1,0 +1,23 @@
+name: Production build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  production-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+      - name: Build static site and production Pages Functions
+        run: sh scripts/build-pages.sh
+      - name: Run Vitest
+        run: npm exec --yes --package=bun@1.4.2-canary.20261008.1 -- bun run test

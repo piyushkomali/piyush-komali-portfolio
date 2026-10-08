@@ -3,17 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "pnpm typecheck && next build",
+    "build": "bun run typecheck && bun --bun next build",
     "cf-typegen": "wrangler types cloudflare-env.d.ts",
-    "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
-    "deploy": "pnpm build && wrangler pages deploy out",
-    "dev": "next dev",
+    "db:migrate": "bun --env-file=.env.local scripts/migrate.mjs",
+    "deploy": "bun run build && wrangler pages deploy out",
+    "dev": "bun --bun next dev",
     "lint": "next lint",
-    "preview": "npx --yes wrangler@4.141.0 pages dev out",
-    "preview:build": "pnpm build && pnpm preview",
+    "preview": "bunx wrangler@4.141.0 pages dev out",
+    "preview:build": "bun run build && bun run preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "start": "wrangler pages dev out"
+    "typecheck": "bun check",
+    "start": "wrangler pages dev out",
+    "build:pages": "sh scripts/build-pages.sh"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.34",
@@ -89,5 +90,10 @@
     "typescript": "^5",
     "vitest": "^4.1.11",
     "wrangler": "^4.127.1"
-  }
+  },
+  "trustedDependencies": [
+    "@tailwindcss/oxide",
+    "esbuild",
+    "workerd"
+  ]
 }
