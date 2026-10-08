@@ -27,10 +27,13 @@ preview command.
 
 - Project name in `wrangler.jsonc`: `piyush-komali-portfolio` (change it if the
   existing Pages project uses a different name).
-- Build command: `npm install -g bun@1.4.2-canary.20261008.1 && bun install --frozen-lockfile && bun run build`
-- Set `SKIP_DEPENDENCY_INSTALL=1` so the explicit frozen Bun install controls dependencies.
+- Build command: `sh scripts/build-pages.sh`
+- Set `BUN_VERSION=1.4.2` for Pages’ initial tool detection and
+  `SKIP_DEPENDENCY_INSTALL=1` so the explicit frozen Bun install controls dependencies.
   The build command bootstraps the pinned checker, since stable Bun 1.4.2 lacks it.
-  Apply these build settings in the Cloudflare Pages dashboard for preview and production.
+  The script also verifies the production Pages Functions bundle with Wrangler.
+  Do not put this npm-only canary version in `packageManager` or `BUN_VERSION`:
+  Pages interprets it as a GitHub release tag and fails before building.
 - Build output directory: `out`
 - Workers AI binding: `AI`
 - Add `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `TMDB_API_KEY`,
@@ -44,7 +47,7 @@ as new files in `db/migrations`; do not edit an already-applied migration.
 
 `bun.lock` is the only project lockfile. Use `bun install --frozen-lockfile`
 on build runners and `bun add` / `bun add -d` when adding packages.
-`packageManager` records the pinned Bun distribution version. Stable Bun 1.4.2
+The Pages build script pins and verifies the Bun distribution. Stable Bun 1.4.2
 cannot run `bun check`, so this project currently uses the canary above.
 
 `bun run typecheck` runs Bun's native checker before the Next.js build.
