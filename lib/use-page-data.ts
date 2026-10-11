@@ -25,6 +25,16 @@ export function usePageData<T>(resource: ReturnType<typeof createBrowserResource
     }
   }, [resource, poll])
 
+  // Retry failed prefetches even on pages without polling. Keeping the timer
+  // in the mounted hook prevents speculative failures from retrying forever.
+  useEffect(() => {
+    if (!snapshot.error) return
+    const timeout = window.setTimeout(() => {
+      if (document.visibilityState === "visible") void resource.refresh(true)
+    }, Math.max(0, resource.getRetryAt() - Date.now()))
+    return () => window.clearTimeout(timeout)
+  }, [snapshot, resource])
+
   // Stop presenting a cached track as live exactly when its freshness expires,
   // even while a slow background request is still pending.
   useEffect(() => {

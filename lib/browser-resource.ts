@@ -41,10 +41,11 @@ export function createBrowserResource<T>(options: {
     if (typeof window === "undefined") return Promise.resolve()
     restore()
     if (pending) return pending
-    if ((!force && snapshot.data && Date.now() - snapshot.fetchedAt < options.freshness) || Date.now() < retryAt) {
+    if ((!force && !snapshot.error && snapshot.data && Date.now() - snapshot.fetchedAt < options.freshness) || Date.now() < retryAt) {
       return Promise.resolve()
     }
     pending = options.load().then(({ data, fetchedAt }) => {
+      retryAt = 0
       publish({ data, fetchedAt, error: false })
       try {
         sessionStorage.setItem(options.key, JSON.stringify({ data, fetchedAt }))
@@ -60,6 +61,7 @@ export function createBrowserResource<T>(options: {
   }
   return {
     freshness: options.freshness,
+    getRetryAt: () => retryAt,
     restore,
     refresh,
     getSnapshot: () => snapshot,

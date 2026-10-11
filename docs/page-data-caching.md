@@ -19,7 +19,10 @@ package or infrastructure binding.
 
 Fresh snapshots suppress navigation requests. Stale snapshots display immediately
 while a request runs. API errors preserve the last successful result and allow
-retry after a five-second cooldown. A failed/expired music snapshot does not
+retry after a five-second cooldown. Mounted, visible pages automatically retry
+failed requests when the cooldown expires, including reviews (which have no
+polling interval). Retry timers are removed on unmount; hidden tabs defer retries
+until visibility resumes. A failed/expired music snapshot does not
 present a cached track as live. The live indicator expires even while a slow
 refresh is pending. Session persistence is best effort, schema checked, versioned,
 and bounded by age; memory caching works when storage is blocked.
