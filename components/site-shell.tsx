@@ -1,7 +1,8 @@
 "use client"
 
-import { type ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 import Link from "next/link"
+import { prefetchPage } from "@/lib/page-data"
 
 const NAV_FONT = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
 
@@ -13,6 +14,18 @@ const navItems = [
 ]
 
 export function SiteShell({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    // Allow initial content to settle before doing speculative work. Link intent
+    // still prefetches immediately, including on touch devices.
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection
+    if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType ?? "")) return
+    const timer = window.setTimeout(() => {
+      prefetchPage("/music")
+      prefetchPage("/reviews")
+    }, 1_000)
+    return () => window.clearTimeout(timer)
+  }, [])
+
   return (
     <section className="flex items-start justify-center px-8 lg:ml-30 sm:px-12 lg:px-16 pt-16 md:pt-12 pb-12">
       <div className="max-w-2xl mx-auto w-full lg:-translate-x-4 xl:-translate-x-5">
@@ -35,6 +48,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 <Link
                   key={item.label}
                   href={item.href}
+                  onMouseEnter={() => prefetchPage(item.href)}
+                  onFocus={() => prefetchPage(item.href)}
+                  onTouchStart={() => prefetchPage(item.href)}
                   className="text-lg text-[#666] hover:text-white transition-colors duration-150 tracking-wide"
                   style={{ fontFamily: NAV_FONT }}
                 >
