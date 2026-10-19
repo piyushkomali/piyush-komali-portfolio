@@ -133,8 +133,9 @@
 
   html {
     scroll-behavior: smooth;
-    /* Reserve space for the scrollbar so pages don't shift horizontally
-       when navigating between short and long pages */
+    /* Keep the viewport width stable across routes and loading states,
+       including browsers that don't support scrollbar-gutter. */
+    overflow-y: scroll;
     scrollbar-gutter: stable;
   }
 
