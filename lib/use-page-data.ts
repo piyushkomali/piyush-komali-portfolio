@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react"
 import type { createBrowserResource } from "./browser-resource"
 
 export function usePageData<T>(resource: ReturnType<typeof createBrowserResource<T>>, poll?: number) {
+  // need to pass getServerSnapshot because its a static generated site and it is the inital SSR render look to rid when migrating
   const snapshot = useSyncExternalStore(resource.subscribe, resource.getSnapshot, resource.getServerSnapshot)
   const [now, setNow] = useState(() => Date.now())
 
