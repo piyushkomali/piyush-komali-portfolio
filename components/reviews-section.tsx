@@ -1,25 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Star, StarHalf } from "lucide-react"
 
-const INTER_FONT = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+import type { ApiReview } from "@/lib/review-types"
+import { reviewsResource } from "@/lib/page-data"
+import { usePageData } from "@/lib/use-page-data"
+import { tmdbPosterVariants } from "@/lib/poster-images"
 
-type ApiReview = {
-  id: string
-  title: string
-  year: number | null
-  poster_url: string | null
-  rating: number
-  liked: boolean
-  rewatch: boolean
-  review: string | null
-  watched_on: string // "YYYY-MM-DD"
-  tags: string[]
-  letterboxd_url: string | null
-  tmdb_id: number | null
-  created_at: string
-}
+const INTER_FONT = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
 
 type DisplayReview = {
   id: string
@@ -71,19 +60,6 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
-function tmdbPosterVariants(src: string) {
-  try {
-    const url = new URL(src)
-    const match = url.pathname.match(/^\/t\/p\/(?:w\d+|original)\/(.+)$/)
-    if (url.protocol !== "https:" || url.hostname !== "image.tmdb.org" || !match) return null
-
-    const poster = (size: string) => `${url.origin}/t/p/${size}/${match[1]}${url.search}`
-    return { small: poster("w92"), medium: poster("w154"), large: poster("w185") }
-  } catch {
-    return null
-  }
-}
-
 function PosterImage({ src, alt, eager }: { src: string; alt: string; eager: boolean }) {
   const [broken, setBroken] = useState(false)
   const variants = tmdbPosterVariants(src)
@@ -123,30 +99,9 @@ function DateMarker({ label, muted }: { label: string; muted: boolean }) {
 }
 
 export function ReviewsSection() {
-  const [reviews, setReviews] = useState<DisplayReview[] | null>(null)
-  const [errored, setErrored] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const res = await fetch("/api/reviews")
-        if (!res.ok) throw new Error("bad status")
-        const data = (await res.json()) as { reviews: ApiReview[] }
-        if (cancelled) return
-        setReviews((data.reviews || []).map(toDisplay))
-      } catch {
-        if (!cancelled) {
-          setErrored(true)
-          setReviews((current) => current ?? [])
-        }
-      }
-    }
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { data, error } = usePageData(reviewsResource)
+  const reviews = data ? data.reviews.map(toDisplay) : error ? [] : null
+  const errored = !!error
 
   // Compute date markers: first entry per month and year gets a period label, subsequent entries get a day number.
   const list = reviews ?? []

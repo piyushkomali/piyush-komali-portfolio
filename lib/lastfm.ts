@@ -14,7 +14,13 @@ function pickImage(images: LastFmImage[] | undefined): string | null {
   )
 }
 
-export async function getLastFmDashboard(apiKey: string) {
+export type LastFmCache = Pick<Cache, "match" | "put">
+
+export async function getLastFmDashboard(apiKey: string, caching?: {
+  cache: LastFmCache
+  origin: string
+  waitUntil: (promise: Promise<unknown>) => void
+}) {
   const requestUrl = (method: string, options: Record<string, string>) => {
     const params = new URLSearchParams({
       method,
@@ -26,15 +32,41 @@ export async function getLastFmDashboard(apiKey: string) {
     return `${LASTFM_BASE}?${params}`
   }
 
-  const responses = await Promise.all([
-    fetch(requestUrl("user.getrecenttracks", { limit: "8" })),
-    fetch(requestUrl("user.gettopartists", { period: "1month", limit: "5" })),
-    fetch(requestUrl("user.gettopalbums", { period: "1month", limit: "6" })),
-    fetch(requestUrl("user.getinfo", {})),
+  async function request(method: string, options: Record<string, string>, ttl: number) {
+    // Cache keys contain no credentials and are isolated by deployment hostname.
+    const key = new Request(`${caching?.origin ?? "https://cache.invalid"}/_lastfm-cache/v1/${LASTFM_USERNAME}/${method}`)
+    if (caching) {
+      try {
+        const hit = await caching.cache.match(key)
+        if (hit) return { payload: await hit.json() as LastFmPayload, fetchedAt: Number(hit.headers.get("X-Fetched-At")) }
+      } catch {
+        // A cache outage must not prevent a live request.
+      }
+    }
+    const response = await fetch(requestUrl(method, options), { signal: AbortSignal.timeout(8_000) })
+    if (!response.ok) throw new Error("Last.fm unavailable")
+    const payload = await response.json() as LastFmPayload
+    if (payload.error || !payload[method === "user.getrecenttracks" ? "recenttracks" : method === "user.gettopartists" ? "topartists" : "topalbums"]) {
+      throw new Error("Invalid Last.fm response")
+    }
+    const fetchedAt = Date.now()
+    if (caching) {
+      const stored = new Response(JSON.stringify(payload), { headers: {
+        "Content-Type": "application/json", "Cache-Control": `public, max-age=${ttl}`, "X-Fetched-At": String(fetchedAt),
+      } })
+      caching.waitUntil(caching.cache.put(key, stored).catch(() => { console.error("lastfm_cache_write_failed") }))
+    }
+    return { payload, fetchedAt }
+  }
+
+  const [recent, artists, albums] = await Promise.all([
+    request("user.getrecenttracks", { limit: "8" }, 15),
+    request("user.gettopartists", { period: "1month", limit: "5" }, 600),
+    request("user.gettopalbums", { period: "1month", limit: "6" }, 600),
   ])
-  const [recentData, topArtistsData, topAlbumsData, userInfoData] = (await Promise.all(
-    responses.map(async (response) => (response.ok ? response.json() : null)),
-  )) as Array<LastFmPayload | null>
+  const recentData = recent.payload
+  const topArtistsData = artists.payload
+  const topAlbumsData = albums.payload
 
   const asArray = <T>(value: T | T[] | undefined): T[] =>
     Array.isArray(value) ? value : value ? [value] : []
@@ -70,23 +102,6 @@ export async function getLastFmDashboard(apiKey: string) {
     image: pickImage(album.image),
   }))
 
-  const user = userInfoData?.user
-  const stats = user
-    ? {
-        playcount: Number(user.playcount ?? 0),
-        artistCount: Number(user.artist_count ?? 0),
-        albumCount: Number(user.album_count ?? 0),
-        trackCount: Number(user.track_count ?? 0),
-        profileUrl: user.url ?? `https://www.last.fm/user/${LASTFM_USERNAME}`,
-      }
-    : {
-        playcount: 0,
-        artistCount: 0,
-        albumCount: 0,
-        trackCount: 0,
-        profileUrl: `https://www.last.fm/user/${LASTFM_USERNAME}`,
-      }
-
   return {
     username: LASTFM_USERNAME,
     nowPlaying: recentTracks.find((track) => track.isPlaying) ?? null,
@@ -94,6 +109,6 @@ export async function getLastFmDashboard(apiKey: string) {
     recentTracks,
     topArtists,
     topAlbums,
-    stats,
+    fetchedAt: recent.fetchedAt,
   }
 }

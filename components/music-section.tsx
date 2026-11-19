@@ -1,44 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
+
+import type { Track, Artist, Album } from "@/lib/music-types"
+import { musicResource } from "@/lib/page-data"
+import { usePageData } from "@/lib/use-page-data"
 
 const INTER_FONT = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-
-type Track = {
-  name: string
-  artist: string
-  album: string
-  image: string | null
-  url: string | null
-  isPlaying: boolean
-  playedAt: number | null
-}
-
-type Artist = {
-  name: string
-  playcount: number
-  url: string | null
-  image: string | null
-}
-
-type Album = {
-  name: string
-  artist: string
-  playcount: number
-  url: string | null
-  image: string | null
-}
-
-type MusicData = {
-  username: string
-  nowPlaying: Track | null
-  lastTrack: Track | null
-  recentTracks: Track[]
-  topArtists: Artist[]
-  topAlbums: Album[]
-}
-
-const STORAGE_KEY = "lastfm-last-seen-track-v1"
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
@@ -419,64 +387,12 @@ function Skeleton() {
 /* --------------------------------------------------------------------- */
 
 export function MusicSection() {
-  const [data, setData] = useState<MusicData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const lastSeenRef = useRef<Track | null>(null)
-
-  // Load cached last-seen track for smoother transitions
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        lastSeenRef.current = JSON.parse(raw)
-      }
-    } catch {
-      // ignore
-    }
-  }, [])
-
-  const fetchData = async () => {
-    try {
-      const res = await fetch(`/api/now-playing?t=${Date.now()}`, {
-        cache: "no-store",
-      })
-      if (!res.ok) {
-        setError("Couldn't reach Last.fm")
-        return
-      }
-      const json = (await res.json()) as MusicData
-      if ((json as unknown as { error?: string }).error) {
-        setError("Couldn't reach Last.fm")
-        return
-      }
-
-      // Cache the currently-playing track
-      if (json.nowPlaying) {
-        lastSeenRef.current = json.nowPlaying
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(json.nowPlaying))
-        } catch {
-          // ignore
-        }
-      }
-
-      setError(null)
-      setData(json)
-    } catch {
-      setError("Couldn't reach Last.fm")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchData()
-    const interval = setInterval(fetchData, 30000) // poll every 30s
-    return () => clearInterval(interval)
-  }, [])
-
-  const heroTrack = data?.nowPlaying ?? data?.lastTrack ?? null
+  const { data, error, stale } = usePageData(musicResource, 30_000)
+  const loading = !data && !error
+  const currentTrack = data?.nowPlaying ?? data?.lastTrack ?? null
+  const heroTrack = currentTrack && stale ? { ...currentTrack, isPlaying: false } : currentTrack
+  const recentTracks = data?.recentTracks.slice(data.nowPlaying ? 1 : 0, data.nowPlaying ? 8 : 7)
+    .map((track) => stale ? { ...track, isPlaying: false } : track) ?? []
 
   return (
     <div className="max-w-xl" style={{ fontFamily: INTER_FONT }}>
@@ -486,13 +402,18 @@ export function MusicSection() {
           <Skeleton />
         ) : error && !data ? (
           <div className="rounded-[4px] border border-[#2a2a2a] bg-[#111111] p-5 text-center">
-            <p className="text-[13px] text-[#888]">{error}</p>
+            <p className="text-[13px] text-[#888]">Couldn&apos;t reach Last.fm</p>
             <p className="text-[11px] text-[#555] mt-1">
               Try refreshing in a moment.
             </p>
           </div>
         ) : data ? (
           <div className="space-y-10">
+            {error && (
+              <p className="text-xs text-[color:var(--muted-foreground)]">
+                Music unavailable right now. Showing the last loaded results.
+              </p>
+            )}
             {/* Hero */}
             <NowPlayingHero track={heroTrack} />
 
@@ -507,12 +428,7 @@ export function MusicSection() {
               <SectionHeading right={`${data.recentTracks.length} tracks`}>
                 Recently Played
               </SectionHeading>
-              <RecentTracksList
-                tracks={data.recentTracks.slice(
-                  data.nowPlaying ? 1 : 0,
-                  data.nowPlaying ? 8 : 7
-                )}
-              />
+              <RecentTracksList tracks={recentTracks} />
             </div>
 
             {/* Top artists */}
