@@ -71,18 +71,18 @@ export function HeroSection() {
               </div>
             </div>
 
-            {/* Past Lives */}
+            {/* Yeh Jawaani Hai Deewani */}
             <div className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
                 <img
-                  src="/images/past-lives.png"
-                  alt="Past Lives"
+                  src="/images/yeh-jawaani-hai-deewani.jpg"
+                  alt="Yeh Jawaani Hai Deewani"
                   className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <h3 className="text-white font-medium text-xs">Past Lives</h3>
-                  <p className="text-gray-300 text-[10px]">2023 • Romance/Drama</p>
+                  <h3 className="text-white font-medium text-xs">Yeh Jawaani Hai Deewani</h3>
+                  <p className="text-gray-300 text-[10px]">2013 • Romance/Comedy</p>
                 </div>
               </div>
             </div>
