@@ -90,8 +90,8 @@ export const mdxComponents: MDXComponents = {
     <hr {...props} className="my-10 border-white/10" />
   ),
   img: (props: ImgHTMLAttributes<HTMLImageElement>) => {
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+      // oxlint-disable-next-line nextjs/no-img-element -- MDX images have arbitrary dimensions in this unoptimized static export.
       <img
         {...props}
         alt={props.alt ?? ""}

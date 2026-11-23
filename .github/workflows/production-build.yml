@@ -19,5 +19,7 @@ jobs:
           node-version: 22.18.0
       - name: Build static site and production Pages Functions
         run: sh scripts/build-pages.sh
+      - name: Run Oxlint and Landmines
+        run: npm exec --yes --package=bun@1.4.2-canary.20261008.1 -- bun run lint
       - name: Run Vitest
         run: npm exec --yes --package=bun@1.4.2-canary.20261008.1 -- bun run test

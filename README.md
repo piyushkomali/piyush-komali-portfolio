@@ -51,6 +51,9 @@ and the recommended `@interfere/landmines` rules. Warnings also fail the command
 22.18 or newer. Generated Next.js, Cloudflare, and build files are excluded.
 The Landmines preset checks for hidden failures and unreliable tests; it does
 not attempt to determine whether code was written by AI.
+The prefetch caching suites retain file-scoped test-double exceptions for their
+browser/storage and Cloudflare cache simulations. Narrow React exceptions preserve
+loading, hydration, and clock-based cache freshness behavior.
 
 `bun.lock` is the only project lockfile. Use `bun install --frozen-lockfile`
 on build runners and `bun add` / `bun add -d` when adding packages.

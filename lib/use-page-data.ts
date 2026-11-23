@@ -41,10 +41,12 @@ export function usePageData<T>(resource: ReturnType<typeof createBrowserResource
   useEffect(() => {
     if (!snapshot.data) return
     const delay = snapshot.fetchedAt + resource.freshness - Date.now()
+    // oxlint-disable-next-line react/set-state-in-effect -- Synchronize the cached snapshot's expiry with the browser clock.
     if (delay <= 0) { setNow(Date.now()); return }
     const timeout = window.setTimeout(() => setNow(Date.now()), delay + 1)
     return () => window.clearTimeout(timeout)
   }, [snapshot.fetchedAt, snapshot.data, resource])
 
+  // oxlint-disable-next-line react/purity -- Check wall-clock freshness when rendering cached music data.
   return { ...snapshot, stale: Math.max(now, Date.now()) - snapshot.fetchedAt >= resource.freshness }
 }
