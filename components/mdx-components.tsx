@@ -18,31 +18,39 @@ export const mdxComponents: MDXComponents = {
     <h1
       {...props}
       className="text-3xl sm:text-4xl font-semibold text-white tracking-tight mt-0 mb-6"
-    />
+    >
+      {props.children}
+    </h1>
   ),
   h2: (props: HTMLAttributes<HTMLHeadingElement>) => (
     <h2
       {...props}
       className="scroll-mt-24 text-2xl font-semibold text-white mt-12 mb-4"
-    />
+    >
+      {props.children}
+    </h2>
   ),
   h3: (props: HTMLAttributes<HTMLHeadingElement>) => (
     <h3
       {...props}
       className="scroll-mt-24 text-xl font-medium text-white mt-8 mb-3"
-    />
+    >
+      {props.children}
+    </h3>
   ),
   h4: (props: HTMLAttributes<HTMLHeadingElement>) => (
     <h4
       {...props}
       className="scroll-mt-24 text-lg font-medium text-white mt-6 mb-2"
-    />
+    >
+      {props.children}
+    </h4>
   ),
   p: (props: HTMLAttributes<HTMLParagraphElement>) => (
     <p {...props} className="mb-4 leading-relaxed text-[15px] text-gray-300" />
   ),
   a: (props: AnchorHTMLAttributes<HTMLAnchorElement>) => {
-    const { href = "", ...rest } = props
+    const { href = "", children, ...rest } = props
     const isExternal = /^https?:\/\//.test(href)
     return (
       <a
@@ -52,7 +60,9 @@ export const mdxComponents: MDXComponents = {
           ? { target: "_blank", rel: "noopener noreferrer" }
           : {})}
         className="text-white underline underline-offset-4 decoration-white/30 hover:decoration-white/70 transition-colors"
-      />
+      >
+        {children}
+      </a>
     )
   },
   ul: (props: HTMLAttributes<HTMLUListElement>) => (
@@ -80,8 +90,8 @@ export const mdxComponents: MDXComponents = {
     <hr {...props} className="my-10 border-white/10" />
   ),
   img: (props: ImgHTMLAttributes<HTMLImageElement>) => {
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+      // oxlint-disable-next-line nextjs/no-img-element -- MDX images have arbitrary dimensions in this unoptimized static export.
       <img
         {...props}
         alt={props.alt ?? ""}

@@ -26,6 +26,7 @@ export function HeroSection() {
             {/* Good Will Hunting */}
             <div className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
+                {/* oxlint-disable-next-line nextjs/no-img-element -- Local posters are served directly by the static export. */}
                 <img
                   src="/images/good-will.png"
                   alt="Good Will Hunting"
@@ -42,6 +43,7 @@ export function HeroSection() {
             {/* Dunkirk */}
             <div className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
+                {/* oxlint-disable-next-line nextjs/no-img-element -- Local posters are served directly by the static export. */}
                 <img
                   src="/images/dunkirk.png"
                   alt="Dunkirk"
@@ -58,6 +60,7 @@ export function HeroSection() {
             {/* Dune */}
             <div className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
+                {/* oxlint-disable-next-line nextjs/no-img-element -- Local posters are served directly by the static export. */}
                 <img
                   src="/images/dune.png"
                   alt="Dune"
@@ -74,6 +77,7 @@ export function HeroSection() {
             {/* Yeh Jawaani Hai Deewani */}
             <div className="group cursor-pointer">
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
+                {/* oxlint-disable-next-line nextjs/no-img-element -- Local posters are served directly by the static export. */}
                 <img
                   src="/images/yeh-jawaani-hai-deewani.jpg"
                   alt="Yeh Jawaani Hai Deewani"

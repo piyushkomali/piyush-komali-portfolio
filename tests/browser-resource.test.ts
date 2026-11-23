@@ -1,3 +1,4 @@
+/* oxlint-disable landmines/no-test-doubles -- Preserve the prefetch suite's browser and Cloudflare cache boundary simulations. */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { createBrowserResource } from "@/lib/browser-resource"
 
