@@ -66,7 +66,7 @@ function PosterImage({ src, alt, eager }: { src: string; alt: string; eager: boo
 
   return (
     <div className="shrink-0 w-[60px] h-[90px] max-[480px]:w-[50px] max-[480px]:h-[75px] rounded-[3px] overflow-hidden bg-[color:var(--muted)] border border-[color:var(--border)]">
-      {!broken && src && (
+      {!broken && src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={variants?.medium ?? src}
@@ -80,6 +80,11 @@ function PosterImage({ src, alt, eager }: { src: string; alt: string; eager: boo
           className="w-full h-full object-cover"
           onError={() => setBroken(true)}
         />
+      ) : (
+        <span className="flex h-full items-center justify-center px-0.5 text-center text-[7px] leading-tight text-[color:var(--muted-foreground)]">
+          <span aria-hidden="true">No poster</span>
+          <span className="sr-only">{alt} poster unavailable</span>
+        </span>
       )}
     </div>
   )

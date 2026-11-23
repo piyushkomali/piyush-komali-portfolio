@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": ["./node_modules/@interfere/landmines/configs/recommended.json"],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "nextjs", "jsx-a11y", "import"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "nextjs/no-html-link-for-pages": "error",
+    "nextjs/no-sync-scripts": "error"
+  },
+  "ignorePatterns": [".next/**", "out/**", ".wrangler/**", "build/**", "cloudflare-env.d.ts", "next-env.d.ts"]
+}

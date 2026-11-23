@@ -45,6 +45,13 @@ as new files in `db/migrations`; do not edit an already-applied migration.
 
 ## Validation
 
+`bun run lint` runs Oxlint with React, Next.js, TypeScript, accessibility checks,
+and the recommended `@interfere/landmines` rules. Warnings also fail the command.
+`bun run lint:fix` applies available safe fixes. Landmines requires Node.js
+22.18 or newer. Generated Next.js, Cloudflare, and build files are excluded.
+The Landmines preset checks for hidden failures and unreliable tests; it does
+not attempt to determine whether code was written by AI.
+
 `bun.lock` is the only project lockfile. Use `bun install --frozen-lockfile`
 on build runners and `bun add` / `bun add -d` when adding packages.
 The Pages build script pins and verifies the Bun distribution. Stable Bun 1.4.2
@@ -63,6 +70,7 @@ start, deploy, and type generation use the Wrangler version in `bun.lock`.
 Native install scripts are explicitly allowed for Tailwind oxide, esbuild, and workerd.
 
 ```sh
+bun run lint
 bun run test
 bun run typecheck
 bun run build

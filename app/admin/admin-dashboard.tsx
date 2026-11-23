@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 import type { UIMessage } from "ai"
@@ -67,32 +67,43 @@ export function AdminDashboard() {
   const [reviews, setReviews] = useState<ReviewRow[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(true)
   const [reviewsError, setReviewsError] = useState<string | null>(null)
+  const latestRequestId = useRef(0)
   const reviewMutationKey = latestSuccessfulReviewMutationKey(messages)
 
   const loadReviews = useCallback(async () => {
+    const requestId = ++latestRequestId.current
     setReviewsLoading(true)
     setReviewsError(null)
     try {
       const res = await fetch("/api/admin/reviews", { cache: "no-store" })
+      if (requestId !== latestRequestId.current) return
       if (!res.ok) {
         setReviewsError(`Failed to load (${res.status})`)
         setReviews([])
       } else {
         const data = (await res.json()) as { reviews: ReviewRow[] }
+        if (requestId !== latestRequestId.current) return
         setReviews(data.reviews || [])
       }
     } catch (e) {
+      if (requestId !== latestRequestId.current) return
       setReviewsError(e instanceof Error ? e.message : "Failed to load")
     } finally {
-      setReviewsLoading(false)
+      if (requestId === latestRequestId.current) setReviewsLoading(false)
     }
   }, [])
 
   useEffect(() => {
+    const requestCounter = latestRequestId
+    // oxlint-disable-next-line react/set-state-in-effect -- Start the initial fetch with its loading and error state.
     loadReviews()
+    return () => {
+      requestCounter.current++
+    }
   }, [loadReviews])
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Refresh reviews and loading state after a chat mutation.
     if (reviewMutationKey) loadReviews()
   }, [reviewMutationKey, loadReviews])
 

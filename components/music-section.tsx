@@ -293,6 +293,7 @@ function TopArtistsList({ artists }: { artists: Artist[] }) {
           <li key={a.name}>
             <a
               href={a.url ?? "#"}
+              aria-labelledby={`top-artist-${i}`}
               target="_blank"
               rel="noopener noreferrer"
               className="group block rounded-[3px] px-2 py-2 -mx-2 hover:bg-[#151515] transition-colors duration-150"
@@ -301,7 +302,7 @@ function TopArtistsList({ artists }: { artists: Artist[] }) {
                 <span className="text-[10px] text-[#444] tabular-nums w-4 flex-shrink-0">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span className="text-[13px] text-white font-medium truncate flex-1 min-w-0">
+                <span id={`top-artist-${i}`} className="text-[13px] text-white font-medium truncate flex-1 min-w-0">
                   {a.name}
                 </span>
                 <span className="text-[10px] text-[#666] tabular-nums flex-shrink-0 tracking-wide">

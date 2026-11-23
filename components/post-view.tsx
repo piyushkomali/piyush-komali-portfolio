@@ -81,6 +81,7 @@ export function PostView({
   const articleRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Enable the body portal only after hydration.
     setMounted(true)
   }, [])
 

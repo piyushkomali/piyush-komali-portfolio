@@ -35,9 +35,10 @@ export function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
+      <label htmlFor="admin-password" className="sr-only">Password</label>
       <input
+        id="admin-password"
         type="password"
-        autoFocus
         autoComplete="current-password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}

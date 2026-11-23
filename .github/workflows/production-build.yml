@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.16.0
+          node-version: 22.18.0
       - name: Build static site and production Pages Functions
         run: sh scripts/build-pages.sh
       - name: Run Vitest
