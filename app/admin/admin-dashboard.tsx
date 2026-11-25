@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 import type { UIMessage } from "ai"
+import { AdminChatMessage } from "@/components/admin-chat-message"
 
 type ReviewRow = {
   id: string
@@ -19,18 +20,6 @@ type ReviewRow = {
   letterboxd_url: string | null
   tmdb_id: number | null
   created_at: string
-}
-
-function messageText(m: UIMessage): string {
-  // Concatenate all text parts. Tool call / tool result parts are rendered separately.
-  return m.parts
-    .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
-    .map((p) => p.text)
-    .join("")
-}
-
-function toolPartsOf(m: UIMessage) {
-  return m.parts.filter((p) => p.type.startsWith("tool-"))
 }
 
 function latestSuccessfulReviewMutationKey(messages: UIMessage[]): string | null {
@@ -145,10 +134,10 @@ export function AdminDashboard() {
         </button>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 min-h-[calc(100vh-49px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:h-[calc(100dvh-61px)]">
         {/* Chat panel */}
-        <section className="border-b lg:border-b-0 lg:border-r border-white/10 flex flex-col">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <section className="h-[80dvh] lg:h-auto min-h-0 min-w-0 border-b lg:border-b-0 lg:border-r border-white/10 flex flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 && (
               <div className="text-xs text-white/40 space-y-2">
                 <p>Paste one or more Letterboxd reviews here. For example:</p>
@@ -165,23 +154,7 @@ Villeneuve delivers a masterclass in world-building. The sandworm riding sequenc
                 <div className="text-[10px] uppercase tracking-wider text-white/40 mb-1">
                   {m.role === "user" ? "You" : "Assistant"}
                 </div>
-                <div className="whitespace-pre-wrap leading-relaxed">
-                  {messageText(m)}
-                </div>
-                {toolPartsOf(m).map((p, idx) => {
-                  const toolName = p.type.replace(/^tool-/, "")
-                  // @ts-expect-error narrow at runtime
-                  const state: string = p.state
-                  return (
-                    <div
-                      key={idx}
-                      className="mt-2 text-[11px] font-mono bg-white/5 border border-white/10 rounded px-2 py-1 text-white/70"
-                    >
-                      <span className="text-white/50">tool</span> {toolName}{" "}
-                      <span className="text-white/40">[{state}]</span>
-                    </div>
-                  )
-                })}
+                <AdminChatMessage message={m} />
               </div>
             ))}
 
@@ -200,6 +173,7 @@ Villeneuve delivers a masterclass in world-building. The sandworm riding sequenc
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Paste a Letterboxd review…"
+              aria-label="Message the reviews assistant"
               rows={3}
               className="flex-1 resize-none rounded-md bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-white/30 font-mono"
               onKeyDown={(e) => {
@@ -220,6 +194,7 @@ Villeneuve delivers a masterclass in world-building. The sandworm riding sequenc
               </button>
               <button
                 type="button"
+                disabled={status === "streaming" || status === "submitted"}
                 onClick={() => setMessages([])}
                 className="rounded-md border border-white/15 text-xs text-white/60 px-2 py-1 hover:text-white"
               >
@@ -230,7 +205,7 @@ Villeneuve delivers a masterclass in world-building. The sandworm riding sequenc
         </section>
 
         {/* Reviews list panel */}
-        <section className="flex flex-col">
+        <section className="min-h-0 min-w-0 flex flex-col">
           <div className="border-b border-white/10 px-4 py-2 flex items-center justify-between">
             <h2 className="text-xs font-medium tracking-wider uppercase text-white/60">
               Saved Reviews
