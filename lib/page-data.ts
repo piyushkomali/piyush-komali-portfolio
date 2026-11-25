@@ -4,16 +4,8 @@ import { tmdbPosterVariants } from "./poster-images"
 import type { MusicData } from "./music-types"
 import { PRIORITY_REVIEW_POSTERS, REVIEWS_API_URL, type ApiReview } from "./review-types"
 
-const track = z.object({
-  name: z.string(), artist: z.string(), album: z.string(), image: z.string().nullable(),
-  url: z.string().nullable(), isPlaying: z.boolean(), playedAt: z.number().nullable(),
-})
-const artist = z.object({ name: z.string(), playcount: z.number(), url: z.string().nullable(), image: z.string().nullable() })
-const musicSchema = z.object({
-  username: z.string(), nowPlaying: track.nullable(), lastTrack: track.nullable(),
-  recentTracks: z.array(track), topArtists: z.array(artist),
-  topAlbums: z.array(artist.extend({ artist: z.string() })),
-})
+import { musicSchema } from "./music-schema"
+
 const reviewSchema = z.object({
   id: z.string(), title: z.string(), year: z.number().nullable(), poster_url: z.string().nullable(),
   rating: z.coerce.number(), liked: z.boolean(), rewatch: z.boolean(), review: z.string().nullable(),
