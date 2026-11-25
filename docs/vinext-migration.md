@@ -155,7 +155,7 @@ that vinext rejects them.
 
 - Next `14.2.16` is inside vinext’s stated range (Next 14+). Re-check the
   [compatibility dashboard](https://vinext.dev/compatibility) at migration time.
-- `@next/mdx`, `remark-gfm`, and `rehype-slug` on `app/posts/[slug]`.
+- `@next/mdx`, `remark-gfm`, and `rehype-slug` on `app/(site)/posts/[slug]`.
 - `next/font/google` (`Space_Grotesk`) and `geist/font/mono`.
 - `images.unoptimized: true` is already set; leave optimization off unless
   vinext’s image support is turned on deliberately.

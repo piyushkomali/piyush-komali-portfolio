@@ -30,9 +30,10 @@ export function PostsList({ posts }: { posts: PostMeta[] }) {
     )
   }
 
+  // Let the card padding extend around the shared text origin.
   return (
     <div
-      className="overflow-hidden rounded-sm border"
+      className="-mx-[13px] -mt-[15px] overflow-hidden rounded-sm border sm:-mx-[17px]"
       style={{ backgroundColor: CARD_BG, borderColor: "#211d16" }}
     >
       <ul className="divide-y divide-white/10">
@@ -51,7 +52,7 @@ export function PostsList({ posts }: { posts: PostMeta[] }) {
               >
                 {/* Date */}
                 <div
-                  className="flex flex-wrap items-center gap-x-2 gap-y-0.5 self-center whitespace-nowrap text-[15px] sm:text-[15px] lg:col-start-1"
+                  className="flex flex-wrap items-center gap-x-2 gap-y-0.5 self-center whitespace-nowrap text-[15px] leading-6 lg:col-start-1"
                   style={{ color: "#92908e" }}
                 >
                   <time dateTime={post.date} className="tabular-nums">

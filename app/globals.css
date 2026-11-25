@@ -229,3 +229,23 @@
     transform: scaleY(1);
   }
 }
+
+.reviews-placeholder {
+  opacity: 0;
+  animation: reveal-reviews-placeholder 0s 180ms forwards;
+}
+
+@keyframes reveal-reviews-placeholder {
+  to { opacity: 1; }
+}
+
+.reviews-list > li:nth-child(n + 7) {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 108px;
+}
+
+@media (max-width: 480px) {
+  .reviews-list > li:nth-child(n + 7) {
+    contain-intrinsic-block-size: auto 89px;
+  }
+}

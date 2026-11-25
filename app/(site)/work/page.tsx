@@ -1,6 +1,3 @@
-"use client"
-
-import { SiteShell } from "@/components/site-shell"
 
 type Item = {
   title: string // for experience: role. for projects: project name
@@ -90,7 +87,7 @@ function ItemBlock({ item }: { item: Item }) {
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
-        <p className="text-sm sm:text-base text-gray-300">
+        <p className="text-sm sm:text-base leading-6 text-gray-300">
           <HeadingWrap {...headingProps}>{heading}</HeadingWrap>
         </p>
         {item.date && (
@@ -119,27 +116,23 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 export default function Work() {
   return (
-    <main className="min-h-screen">
-      <div className="pt-16">
-        <SiteShell>
-          {/* Experience */}
-          <div className="space-y-10">
-            {experiences.map((item) => (
-              <ItemBlock key={item.title} item={item} />
-            ))}
-          </div>
-
-          {/* Projects */}
-          <div className="mt-20">
-            <SectionHeading>Projects</SectionHeading>
-            <div className="space-y-10">
-              {projects.map((item) => (
-                <ItemBlock key={item.title} item={item} />
-              ))}
-            </div>
-          </div>
-        </SiteShell>
+    <>
+      {/* Experience */}
+      <div className="space-y-10">
+        {experiences.map((item) => (
+          <ItemBlock key={item.title} item={item} />
+        ))}
       </div>
-    </main>
+
+      {/* Projects */}
+      <div className="mt-20">
+        <SectionHeading>Projects</SectionHeading>
+        <div className="space-y-10">
+          {projects.map((item) => (
+            <ItemBlock key={item.title} item={item} />
+          ))}
+        </div>
+      </div>
+    </>
   )
 }

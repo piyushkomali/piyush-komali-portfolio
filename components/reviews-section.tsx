@@ -3,12 +3,14 @@
 import { useState } from "react"
 import { Star, StarHalf } from "lucide-react"
 
-import type { ApiReview } from "@/lib/review-types"
+import { PRIORITY_REVIEW_POSTERS, type ApiReview } from "@/lib/review-types"
 import { reviewsResource } from "@/lib/page-data"
 import { usePageData } from "@/lib/use-page-data"
 import { tmdbPosterVariants } from "@/lib/poster-images"
 
 const INTER_FONT = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+const POSTER_CLASS = "shrink-0 w-[60px] h-[90px] max-[480px]:w-[50px] max-[480px]:h-[75px] rounded-[3px] overflow-hidden bg-muted border"
+const CARD_CLASS = "flex flex-1 min-w-0 items-center gap-3 rounded-md border bg-accent px-3 py-2 max-[480px]:px-2 max-[480px]:py-1.5"
 
 type DisplayReview = {
   id: string
@@ -65,17 +67,18 @@ function PosterImage({ src, alt, eager }: { src: string; alt: string; eager: boo
   const variants = tmdbPosterVariants(src)
 
   return (
-    <div className="shrink-0 w-[60px] h-[90px] max-[480px]:w-[50px] max-[480px]:h-[75px] rounded-[3px] overflow-hidden bg-[color:var(--muted)] border border-[color:var(--border)]">
+    <div className={POSTER_CLASS}>
       {!broken && src ? (
-        // eslint-disable-next-line @next/next/no-img-element
+        // Set loading and sizes before selecting the image source.
+        // oxlint-disable-next-line nextjs/no-img-element -- Responsive TMDB variants are selected directly by the browser.
         <img
-          src={variants?.medium ?? src}
-          srcSet={variants ? `${variants.small} 92w, ${variants.medium} 154w, ${variants.large} 185w` : undefined}
+          loading={eager ? "eager" : "lazy"}
           sizes={variants ? "(max-width: 480px) 50px, 60px" : undefined}
+          srcSet={variants ? `${variants.small} 92w, ${variants.medium} 154w, ${variants.large} 185w` : undefined}
+          src={variants?.medium ?? src}
           alt={alt}
           width={60}
           height={90}
-          loading={eager ? "eager" : "lazy"}
           decoding="async"
           className="w-full h-full object-cover"
           onError={() => setBroken(true)}
@@ -93,89 +96,85 @@ function PosterImage({ src, alt, eager }: { src: string; alt: string; eager: boo
 function DateMarker({ label, muted }: { label: string; muted: boolean }) {
   return (
     <div
-      className={`w-14 shrink-0 pt-1 text-[11px] leading-none tracking-wider uppercase text-right pr-1 ${
-        muted ? "text-[color:var(--muted-foreground)]" : "text-white font-bold"
+      className={`w-14 shrink-0 text-[11px] leading-6 tracking-wider uppercase whitespace-nowrap ${
+        muted ? "text-muted-foreground text-right pr-1" : "text-white font-bold"
       }`}
-      style={{ fontFamily: INTER_FONT }}
     >
       {label}
     </div>
   )
 }
 
+function ReviewsPlaceholder() {
+  return (
+    <div aria-hidden="true" className="reviews-placeholder">
+      <ul className="space-y-2 motion-safe:animate-pulse">
+        {Array.from({ length: 5 }, (_, i) => (
+          <li key={i} className="flex items-start gap-2">
+            <div className="w-14 shrink-0 pt-2">
+              <div className={`h-2 rounded bg-white/10 ${i === 0 ? "w-12" : "ml-auto mr-1 w-3"}`} />
+            </div>
+            <div className={CARD_CLASS}>
+              <div className={POSTER_CLASS} />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-1/2 rounded bg-white/10" />
+                <div className="h-2 w-2/3 rounded bg-white/5" />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export function ReviewsSection() {
   const { data, error } = usePageData(reviewsResource)
-  const reviews = data ? data.reviews.map(toDisplay) : error ? [] : null
-  const errored = !!error
-
-  // Compute date markers: first entry per month and year gets a period label, subsequent entries get a day number.
-  const list = reviews ?? []
-  const markers: { label: string; muted: boolean }[] = []
-  let currentPeriod = ""
-  for (const r of list) {
-    const period = `${r.month} ${r.year}`
-    if (period !== currentPeriod) {
-      markers.push({ label: period, muted: false })
-      currentPeriod = period
-    } else {
-      markers.push({ label: String(r.day), muted: true })
-    }
-  }
+  const list = data?.reviews.map(toDisplay) ?? []
+  const loading = !data && !error
 
   return (
-    <div className="max-w-xl" style={{ fontFamily: INTER_FONT }}>
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-[color:var(--border)]">
-        <h2 className="text-gray-400 text-xs font-medium tracking-[0.2em] uppercase">
-          Recent Reviews
-        </h2>
-        <span className="text-[11px] text-[color:var(--muted-foreground)] tracking-wide">
-          {reviews === null ? "…" : `${list.length} reviews`}
-        </span>
-      </div>
-
-      {/* List */}
-      {errored && list.length > 0 && (
-        <p className="mt-4 text-xs text-[color:var(--muted-foreground)]">
+    <section aria-labelledby="reviews-heading" aria-busy={loading} className="max-w-xl" style={{ fontFamily: INTER_FONT }}>
+      <h2 id="reviews-heading" className="sr-only">Reviews</h2>
+      {error && list.length > 0 && (
+        <p className="mb-4 text-xs text-muted-foreground">
           Reviews unavailable right now. Showing the last loaded results.
         </p>
       )}
-      {reviews === null ? (
-        <p className="mt-6 text-sm text-[color:var(--muted-foreground)]">Loading…</p>
+      {loading ? (
+        <ReviewsPlaceholder />
       ) : list.length === 0 ? (
-        <p className="mt-6 text-sm text-[color:var(--muted-foreground)]">
-          {errored ? "Reviews unavailable right now." : "No reviews yet."}
+        <p className="text-sm leading-6 text-muted-foreground">
+          {error ? "Reviews unavailable right now." : "No reviews yet."}
         </p>
       ) : (
-        <ul className="mt-4 space-y-2">
+        <ul className="reviews-list space-y-2">
           {list.map((review, i) => {
-            const marker = markers[i]
+            const previous = list[i - 1]
+            const sameMonth = previous?.month === review.month && previous.year === review.year
             return (
               <li key={review.id} className="flex items-start gap-2">
-                <DateMarker label={marker.label} muted={marker.muted} />
+                <DateMarker label={sameMonth ? String(review.day) : `${review.month} ${review.year}`} muted={sameMonth} />
+                <div className={`${CARD_CLASS} transition-colors duration-150 hover:border-muted-foreground`}>
+                  <PosterImage src={review.poster} alt={review.title} eager={i < PRIORITY_REVIEW_POSTERS} />
 
-                <div className="flex-1 min-w-0">
-                  <div className="group flex items-center gap-3 rounded-md border border-[color:var(--border)] bg-[color:var(--accent)] px-3 py-2 max-[480px]:px-2 max-[480px]:py-1.5 transition-colors duration-150 hover:border-[color:var(--muted-foreground)]">
-                    <PosterImage src={review.poster} alt={review.title} eager={i < 5} />
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <h3 className="text-[13px] max-[480px]:text-[12px] font-semibold text-white truncate">
-                          {review.title}
-                        </h3>
-                        <Stars rating={review.rating} />
-                      </div>
-
-                      <p
-                        className="mt-1 text-[12px] max-[480px]:text-[11px] leading-snug text-[color:var(--muted-foreground)] whitespace-nowrap overflow-hidden"
-                        style={{
-                          maskImage: "linear-gradient(to right, black 60%, transparent 95%)",
-                          WebkitMaskImage: "linear-gradient(to right, black 60%, transparent 95%)",
-                        }}
-                      >
-                        {review.snippet}
-                      </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h3 className="text-[13px] max-[480px]:text-[12px] font-semibold text-white truncate">
+                        {review.title}
+                      </h3>
+                      <Stars rating={review.rating} />
                     </div>
+
+                    <p
+                      className="mt-1 text-[12px] max-[480px]:text-[11px] leading-snug text-[color:var(--muted-foreground)] whitespace-nowrap overflow-hidden"
+                      style={{
+                        maskImage: "linear-gradient(to right, black 60%, transparent 95%)",
+                        WebkitMaskImage: "linear-gradient(to right, black 60%, transparent 95%)",
+                      }}
+                    >
+                      {review.snippet}
+                    </p>
                   </div>
                 </div>
               </li>
@@ -183,6 +182,6 @@ export function ReviewsSection() {
           })}
         </ul>
       )}
-    </div>
+    </section>
   )
 }

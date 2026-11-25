@@ -1,13 +1,9 @@
-"use client"
-
-import { SiteShell } from "@/components/site-shell"
-
 export function HeroSection() {
   return (
-    <SiteShell>
+    <>
       {/* Description */}
       <div className="space-y-3 text-sm sm:text-base lg:text-lg leading-relaxed text-gray-300 max-w-xl">
-        <p>
+        <p className="leading-6">
           hi! i'm piyush, a computer science student at virginia tech raised in charlotte. i love watching <a href="https://boxd.it/38Jc1" target="_blank" rel="noopener noreferrer" className="text-white font-medium underline decoration-dotted decoration-[#555] hover:decoration-white underline-offset-[3px] decoration-[1.5px] transition-colors duration-200">films</a> and playing <a href="https://www.ultirzr.app/player/650f06dbd595c47d2820421f" target="_blank" rel="noopener noreferrer" className="text-white font-medium underline decoration-dotted decoration-[#555] hover:decoration-white underline-offset-[3px] decoration-[1.5px] transition-colors duration-200">ultimate frisbee</a> in my free time.
         </p>
         <p>
@@ -28,7 +24,7 @@ export function HeroSection() {
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
                 {/* oxlint-disable-next-line nextjs/no-img-element -- Local posters are served directly by the static export. */}
                 <img
-                  src="/images/good-will.png"
+                  src="/images/good-will.webp"
                   alt="Good Will Hunting"
                   className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-110"
                 />
@@ -45,7 +41,7 @@ export function HeroSection() {
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
                 {/* oxlint-disable-next-line nextjs/no-img-element -- Local posters are served directly by the static export. */}
                 <img
-                  src="/images/dunkirk.png"
+                  src="/images/dunkirk.webp"
                   alt="Dunkirk"
                   className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-110"
                 />
@@ -62,7 +58,7 @@ export function HeroSection() {
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
                 {/* oxlint-disable-next-line nextjs/no-img-element -- Local posters are served directly by the static export. */}
                 <img
-                  src="/images/dune.png"
+                  src="/images/dune.webp"
                   alt="Dune"
                   className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-110"
                 />
@@ -79,7 +75,7 @@ export function HeroSection() {
               <div className="relative overflow-hidden rounded-lg bg-gray-900 border border-gray-800 transition-all duration-300 group-hover:border-gray-600 group-hover:scale-105">
                 {/* oxlint-disable-next-line nextjs/no-img-element -- Local posters are served directly by the static export. */}
                 <img
-                  src="/images/yeh-jawaani-hai-deewani.jpg"
+                  src="/images/yeh-jawaani-hai-deewani.webp"
                   alt="Yeh Jawaani Hai Deewani"
                   className="w-full aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-110"
                 />
@@ -100,6 +96,6 @@ export function HeroSection() {
         <a href="mailto:komali.piyush@gmail.com" className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide">email</a>
         <a href="https://x.com/piyushkomali" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#666] hover:text-white transition-colors duration-150 tracking-wide">twitter</a>
       </nav>
-    </SiteShell>
+    </>
   )
 }
