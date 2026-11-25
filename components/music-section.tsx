@@ -391,9 +391,9 @@ export function MusicSection() {
   const { data, error, stale } = usePageData(musicResource, 30_000)
   const loading = !data && !error
   const currentTrack = data?.nowPlaying ?? data?.lastTrack ?? null
-  const heroTrack = currentTrack && stale ? { ...currentTrack, isPlaying: false } : currentTrack
+  const heroTrack = currentTrack && (stale || error) ? { ...currentTrack, isPlaying: false } : currentTrack
   const recentTracks = data?.recentTracks.slice(data.nowPlaying ? 1 : 0, data.nowPlaying ? 8 : 7)
-    .map((track) => stale ? { ...track, isPlaying: false } : track) ?? []
+    .map((track) => (stale || error) ? { ...track, isPlaying: false } : track) ?? []
 
   return (
     <div className="max-w-xl" style={{ fontFamily: INTER_FONT }}>
@@ -410,11 +410,6 @@ export function MusicSection() {
           </div>
         ) : data ? (
           <div className="space-y-10">
-            {error && (
-              <p className="text-xs text-[color:var(--muted-foreground)]">
-                Music unavailable right now. Showing the last loaded results.
-              </p>
-            )}
             {/* Hero */}
             <NowPlayingHero track={heroTrack} />
 

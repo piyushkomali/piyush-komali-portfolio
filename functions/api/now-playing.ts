@@ -1,24 +1,18 @@
-import { getLastFmDashboard, type LastFmCache } from "../../lib/lastfm"
+import { getLastFmDashboard } from "../../lib/lastfm"
+import { loadMusicDashboard } from "../../lib/music-dashboard"
+import { createMusicSnapshotRepository } from "../../lib/music-snapshot"
 import { json, methodNotAllowed } from "../_shared/http"
 import type { AppPagesFunction } from "../types"
 
 export const onRequest: AppPagesFunction = async (context) => {
   if (context.request.method !== "GET") return methodNotAllowed(["GET"])
-  if (!context.env.LASTFM_API_KEY) {
-    return json({ error: "Missing API key" }, { status: 500, headers: { "Cache-Control": "no-store" } })
-  }
   try {
-    let cache: LastFmCache | undefined
-    try {
-      cache = await caches.open("portfolio-lastfm-v1")
-    } catch {
-      // Cache support is an optimization; direct fetching remains available.
-    }
-    const data = await getLastFmDashboard(context.env.LASTFM_API_KEY, cache ? {
-      cache,
-      origin: new URL(context.request.url).origin,
-      waitUntil: (promise) => context.waitUntil(promise),
-    } : undefined)
+    const data = await loadMusicDashboard(async () => {
+      if (!context.env.LASTFM_API_KEY) throw new Error("Missing API key")
+      // Fetch the whole suite together; never combine a failed suite with
+      // individually cached sections from another request.
+      return getLastFmDashboard(context.env.LASTFM_API_KEY)
+    }, createMusicSnapshotRepository(context.env.DATABASE_URL), (promise) => context.waitUntil(promise))
     return json(data, {
       headers: { "Cache-Control": "no-cache", "X-Music-Fetched-At": String(data.fetchedAt) },
     })
