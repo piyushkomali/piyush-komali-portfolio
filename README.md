@@ -79,3 +79,23 @@ bun run typecheck
 bun run build
 bun run cf-typegen
 ```
+
+### Music outage backup
+
+Apply `db/migrations/0002_music_snapshot.sql` with `bun run db:migrate`
+**before deploying** the music backup API. It uses the existing `DATABASE_URL`;
+no new Cloudflare bindings are required. After deployment, request
+`/api/now-playing` while Last.fm is healthy to seed the first backup, then verify
+that `music_snapshots` contains the `piyushk12` row.
+
+Every successful complete Last.fm suite saves one dashboard in Neon. Concurrent
+older responses cannot overwrite a newer backup. If any section fails, the API
+returns the entire last successful dashboard without an age cutoff, preserving
+its timestamp and disabling live playback. No stale-data notice appears in the
+music UI. Individual upstream section caches are bypassed so failed suites
+cannot create a backup mixing fresh and cached sections.
+
+A first-time browser can use this server backup. Before the first successful
+snapshot exists, or if both Last.fm and the database are unavailable, the API
+still returns an error; it cannot produce music data that was never saved.
+Snapshot write failures are logged and do not prevent live music from loading.
