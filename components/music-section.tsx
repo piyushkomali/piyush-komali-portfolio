@@ -403,7 +403,7 @@ export function MusicSection() {
           <Skeleton />
         ) : error && !data ? (
           <div className="rounded-[4px] border border-[#2a2a2a] bg-[#111111] p-5 text-center">
-            <p className="text-[13px] text-[#888]">Couldn&apos;t reach Last.fm</p>
+            <p className="text-[13px] text-[#888]">lastfm is quiet right now</p>
             <p className="text-[11px] text-[#555] mt-1">
               Try refreshing in a moment.
             </p>
