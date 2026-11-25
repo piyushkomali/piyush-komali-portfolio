@@ -32,6 +32,44 @@ export type Review = {
 
 type DatabaseReview = Omit<Review, "rating"> & { rating: number | string }
 
+export type CatalogReview = Pick<Review, "id" | "title" | "year" | "rating" | "watched_on">
+
+export type ReviewCatalog = {
+  reviews: CatalogReview[]
+  totalReviews: number
+  totalMovies: number
+  returnedReviews: number
+  hasMore: boolean
+}
+
+/** Read rows and counts from one database snapshot. An omitted limit returns the full catalog. */
+async function listReviewCatalog(sql: Sql, limit?: number): Promise<ReviewCatalog> {
+  const [catalog] = await sql`
+    WITH recent AS (
+      SELECT id, title, year, rating,
+             to_char(watched_on, 'YYYY-MM-DD') AS watched_on, created_at
+      FROM reviews
+      ORDER BY watched_on DESC, created_at DESC, id DESC
+      LIMIT ${limit ?? null}
+    )
+    SELECT
+      count(*)::int AS total_reviews,
+      count(DISTINCT (lower(btrim(title)), year))::int AS total_movies,
+      (SELECT coalesce(json_agg(json_build_object(
+        'id', id, 'title', title, 'year', year, 'rating', rating, 'watched_on', watched_on
+      ) ORDER BY watched_on DESC, created_at DESC, id DESC), '[]'::json) FROM recent) AS reviews
+    FROM reviews
+  ` as unknown as { total_reviews: number; total_movies: number; reviews: CatalogReview[] }[]
+  const reviews = catalog.reviews.map((review) => ({ ...review, rating: Number(review.rating) }))
+  return {
+    reviews,
+    totalReviews: catalog.total_reviews,
+    totalMovies: catalog.total_movies,
+    returnedReviews: reviews.length,
+    hasMore: reviews.length < catalog.total_reviews,
+  }
+}
+
 function normalizeReview(row: DatabaseReview): Review {
   return { ...row, rating: Number(row.rating) }
 }
@@ -69,6 +107,7 @@ export type BatchInsertResult = {
 
 export interface ReviewRepository {
   listReviews(limit?: number): Promise<Review[]>
+  listReviewCatalog(limit?: number): Promise<ReviewCatalog>
   createReviews(reviews: NewReview[]): Promise<BatchInsertResult>
   deleteReview(id: string): Promise<boolean>
 }
@@ -114,6 +153,10 @@ export function createReviewRepository(databaseUrl: string): ReviewRepository {
   }
 
   return {
+    listReviewCatalog(limit?: number): Promise<ReviewCatalog> {
+      return listReviewCatalog(requestSql(), limit)
+    },
+
     listReviews(limit = 100): Promise<Review[]> {
       return listReviews(requestSql(), limit)
     },
