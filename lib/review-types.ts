@@ -1,3 +1,6 @@
+export const REVIEWS_API_URL = "/api/reviews"
+export const PRIORITY_REVIEW_POSTERS = 3
+
 export type ApiReview = {
   id: string
   title: string

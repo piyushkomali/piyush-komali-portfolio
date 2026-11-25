@@ -1,10 +1,12 @@
 # Music and reviews loading
 
-The shared shell starts a one-time prefetch one second after mounting. Hover,
-keyboard focus, and touch on the music/reviews links also start it immediately.
-Automatic speculative requests are skipped for Save-Data and 2G connections.
-Only the first five review posters and the music hero/first three album covers
-are warmed; the browser selects the same responsive poster source as the page.
+The public layout preloads `/api/reviews` from the initial HTML. The shared shell
+consumes the preload as soon as it hydrates and starts a music prefetch one second
+later. Hover, keyboard focus, and touch can also start either prefetch.
+The scheduled music request is skipped for Save-Data and 2G connections.
+The first three review posters and the music hero/first three album covers are
+warmed. The browser loads other posters lazily and selects the same responsive
+poster source as the page.
 
 `lib/browser-resource.ts` shares completed results and in-flight requests across
 client navigation. `useSyncExternalStore` supplies a stable empty server snapshot
@@ -52,9 +54,13 @@ may not support Cache API operations. Browser caching still works there. No
 always-running server, database change, or new Cloudflare binding is required.
 See [Cloudflare Cache API](https://developers.cloudflare.com/workers/runtime-apis/cache/).
 
-A first-ever direct visit still needs a request. Prefetching can only hide that
-wait when the user gives it a head start. Existing reviews API HTTP cache headers
-remain in place; the client cache additionally prevents repeated navigation waits.
+The public Reviews function stores successful responses in the Cloudflare
+Cache API for 60 seconds per data center. Cache misses and cache outages fall
+back to Neon. The `Server-Timing` response header reports a cache hit or the
+time spent on the database request, and `X-Reviews-Fetched-At` preserves the age
+of cached results across layers. The first visit to an uncached data center still
+needs a database request. The Reviews placeholder only becomes visible after
+180 ms, so fast requests and restored sessions can render without a loading flash.
 
 ## Validation
 

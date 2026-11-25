@@ -1,5 +1,10 @@
-import Home from "./page"
+import SiteLayout from "./(site)/layout"
+import Home from "./(site)/page"
 
 export default function NotFound() {
-  return <Home />
+  return (
+    <SiteLayout>
+      <Home />
+    </SiteLayout>
+  )
 }

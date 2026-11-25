@@ -2,7 +2,7 @@ import { z } from "zod"
 import { createBrowserResource } from "./browser-resource"
 import { tmdbPosterVariants } from "./poster-images"
 import type { MusicData } from "./music-types"
-import type { ApiReview } from "./review-types"
+import { PRIORITY_REVIEW_POSTERS, REVIEWS_API_URL, type ApiReview } from "./review-types"
 
 const track = z.object({
   name: z.string(), artist: z.string(), album: z.string(), image: z.string().nullable(),
@@ -22,11 +22,16 @@ const reviewSchema = z.object({
 })
 const reviewsSchema = z.object({ reviews: z.array(reviewSchema) })
 
-async function load<T>(url: string, schema: z.ZodType<T, z.ZodTypeDef, unknown>) {
-  const response = await fetch(url, { cache: "no-cache", signal: AbortSignal.timeout(15_000) })
+async function load<T>(
+  url: string,
+  schema: z.ZodType<T, z.ZodTypeDef, unknown>,
+  cache: RequestCache,
+  timestampHeader: string,
+) {
+  const response = await fetch(url, { cache, signal: AbortSignal.timeout(15_000) })
   if (!response.ok) throw new Error("API unavailable")
   const data = schema.parse(await response.json())
-  const originTime = Number(response.headers.get("X-Music-Fetched-At"))
+  const originTime = Number(response.headers.get(timestampHeader))
   const fetchedAt = originTime > 0 && originTime <= Date.now() ? originTime : Date.now()
   return { data, fetchedAt }
 }
@@ -45,7 +50,7 @@ function warmImage(src: string | null, poster = false) {
 
 export const musicResource = createBrowserResource<MusicData>({
   key: "portfolio-music-v1", freshness: 30_000, retention: 15 * 60_000,
-  load: () => load("/api/now-playing", musicSchema),
+  load: () => load("/api/now-playing", musicSchema, "no-cache", "X-Music-Fetched-At"),
   validate: (data): data is MusicData => musicSchema.safeParse(data).success,
   warm: (data) => {
     warmImage((data.nowPlaying ?? data.lastTrack)?.image ?? null)
@@ -54,9 +59,9 @@ export const musicResource = createBrowserResource<MusicData>({
 })
 export const reviewsResource = createBrowserResource<{ reviews: ApiReview[] }>({
   key: "portfolio-reviews-v1", freshness: 5 * 60_000, retention: 24 * 60 * 60_000,
-  load: () => load("/api/reviews", reviewsSchema),
+  load: () => load(REVIEWS_API_URL, reviewsSchema, "default", "X-Reviews-Fetched-At"),
   validate: (data): data is { reviews: ApiReview[] } => reviewsSchema.safeParse(data).success,
-  warm: (data) => data.reviews.slice(0, 5).forEach((review) => warmImage(review.poster_url, true)),
+  warm: (data) => data.reviews.slice(0, PRIORITY_REVIEW_POSTERS).forEach((review) => warmImage(review.poster_url, true)),
 })
 
 export function prefetchPage(href: string) {

@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { SiteShell } from "@/components/site-shell"
 import { PostView } from "@/components/post-view"
 import { getAllPostSlugs, getPostBySlug } from "@/lib/posts"
 
@@ -27,14 +26,8 @@ export default function PostPage({ params }: { params: { slug: string } }) {
   const MDX = post.default
 
   return (
-    <main className="min-h-screen">
-      <div className="pt-16">
-        <SiteShell>
-          <PostView meta={post.meta} toc={post.toc}>
-            <MDX />
-          </PostView>
-        </SiteShell>
-      </div>
-    </main>
+    <PostView meta={post.meta} toc={post.toc}>
+      <MDX />
+    </PostView>
   )
 }
