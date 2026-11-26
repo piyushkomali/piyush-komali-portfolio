@@ -8,11 +8,11 @@ export interface MusicSnapshotRepository {
 export async function loadMusicDashboard(
   load: () => Promise<MusicDashboard>,
   snapshots: MusicSnapshotRepository,
-  waitUntil: (promise: Promise<unknown>) => void,
+  runInBackground: (promise: Promise<unknown>) => void,
 ): Promise<MusicDashboard> {
   try {
     const data = musicDashboardSchema.parse(await load())
-    waitUntil(snapshots.write(data).catch(() => { console.error("music_snapshot_write_failed") }))
+    runInBackground(snapshots.write(data).catch(() => { console.error("music_snapshot_write_failed") }))
     return data
   } catch {
     const saved = await snapshots.read("piyushk12")
