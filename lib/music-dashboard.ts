@@ -18,8 +18,7 @@ export async function loadMusicDashboard(
   } catch {
     const saved = await snapshots.read("piyushk12")
     if (!saved) throw new Error("No music snapshot available")
-    // Preserve the original timestamp and the entire saved dashboard. A backup
-    // must never advertise playback as live, even if the snapshot is very recent.
+    // Keep the saved timestamp, but turn off live playback.
     return {
       ...saved,
       nowPlaying: null,
