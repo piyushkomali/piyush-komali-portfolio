@@ -1,17 +1,20 @@
 import { createWorkersAI } from "workers-ai-provider"
 import {
   convertToModelMessages,
+  createUIMessageStream,
   createUIMessageStreamResponse,
+  hasToolCall,
+  safeValidateUIMessages,
   stepCountIs,
   streamText,
   toUIMessageStream,
   tool,
-  type UIMessage,
 } from "ai"
 import { z } from "zod"
 import { createReviewRepository, type NewReview, type ReviewRepository } from "../../lib/db"
 import { createDeleteConfirmation, isConfirmedDeleteMessage } from "../../lib/delete-confirmation"
 import { normalizeLetterboxdUrl } from "../../lib/letterboxd"
+import { catalogRequest, hasCatalogResult, withoutCatalogRows } from "../../lib/review-chat"
 import { searchMovie } from "../../lib/tmdb"
 import { isAdmin, sessionSecret } from "../_shared/auth"
 import { json, methodNotAllowed } from "../_shared/http"
@@ -131,17 +134,54 @@ export const onRequest: AppPagesFunction = async (context) => {
   }
   if (context.request.method !== "POST") return methodNotAllowed(["POST"])
 
-  let body: { messages?: UIMessage[] }
+  let body: unknown
   try {
     body = await context.request.json()
   } catch {
     return json({ error: { code: "invalid_body", message: "Invalid request body type" } }, { status: 400 })
   }
-  if (!Array.isArray(body.messages)) {
-    return json({ error: { code: "invalid_messages", message: "messages must be an array" } }, { status: 400 })
+  const parsed = z.object({
+    messages: z.array(z.object({
+      id: z.string(),
+      role: z.enum(["user", "assistant"]),
+      parts: z.array(z.object({ type: z.string() }).passthrough()),
+    }).passthrough()).min(1),
+  }).safeParse(body)
+  if (!parsed.success) {
+    return json({ error: { code: "invalid_messages", message: "Invalid chat messages" } }, { status: 400 })
   }
-  const messages = body.messages
+  const validated = await safeValidateUIMessages({ messages: parsed.data.messages })
+  if (!validated.success) {
+    return json({ error: { code: "invalid_messages", message: "Invalid chat messages" } }, { status: 400 })
+  }
+  const messages = validated.data
+  const latest = messages.at(-1)!
+  if (latest.role !== "user" || latest.parts.some((part) => part.type === "text" && typeof part.text !== "string")) {
+    return json({ error: { code: "invalid_messages", message: "The last message must contain user text" } }, { status: 400 })
+  }
   const reviewRepository = createReviewRepository(context.env.DATABASE_URL)
+
+  const latestText = latest.parts.filter((part) => part.type === "text").map((part) => part.text).join("\n")
+  const isDeleteTurn = /\b(?:delete|remove)\b/i.test(latestText)
+  const inventory = catalogRequest(latestText, hasCatalogResult(messages))
+  if (inventory) {
+    return createUIMessageStreamResponse({
+      headers: { "Cache-Control": "no-store" },
+      stream: createUIMessageStream({
+        onError: () => "Could not load reviews. Please retry.",
+        execute: async ({ writer }) => {
+          const toolCallId = crypto.randomUUID()
+          writer.write({ type: "tool-input-available", toolCallId, toolName: "listReviews", input: inventory })
+          try {
+            const catalog = await reviewRepository.listReviewCatalog(inventory.limit)
+            writer.write({ type: "tool-output-available", toolCallId, output: catalog })
+          } catch {
+            writer.write({ type: "tool-output-error", toolCallId, errorText: "Could not load reviews. Please retry." })
+          }
+        },
+      }),
+    })
+  }
 
   const today = todayInNewYork()
   const workersAI = createWorkersAI({ binding: context.env.AI })
@@ -163,9 +203,18 @@ FIELD RULES
 - include letterboxd_url only when explicitly present.
 - never invent details.
 
+CATALOG RULES
+- For every question about saved movies, reviews, counts, or completeness, call listReviews again in this turn. Earlier messages and tool outputs may be stale.
+- Omit limit to retrieve all reviews. Set limit only when the user explicitly requests a latest-N subset.
+- The UI displays listReviews results directly. For a catalog question, end the turn after that tool. Never copy its rows, calculate counts, or write a catalog summary yourself. For a deletion request, continue to the required confirmation tool after finding the review.
+- totalReviews counts saved reviews, including repeat viewings. totalMovies counts distinct normalized title and release-year pairs. hasMore identifies partial results.
+- If a database tool fails, report that failure. Never fill in missing records from memory or earlier conversation.
+- Use short Markdown paragraphs or lists for other responses. Preserve imported review prose exactly.
+
 After a tool result, clearly report created reviews, skipped duplicates, and poster warnings. You may also list reviews. To delete, first call requestDeleteReview with the review id and show the returned confirmation phrase exactly. Ask the user to send that phrase as their entire next message. Only then call deleteReview for the same id. Never call both deletion tools in one turn.`,
-    messages: await convertToModelMessages(messages),
-    stopWhen: stepCountIs(5),
+    messages: await convertToModelMessages(withoutCatalogRows(messages), { ignoreIncompleteToolCalls: true }),
+    stopWhen: isDeleteTurn ? stepCountIs(5) : [stepCountIs(5), hasToolCall("listReviews")],
+    abortSignal: context.request.signal,
     tools: {
       importReviews: tool({
         description: `Validate and atomically import one complete batch of 1 to ${MAX_IMPORT_SIZE} reviews. Call exactly once per user paste.`,
@@ -179,14 +228,9 @@ After a tool result, clearly report created reviews, skipped duplicates, and pos
         },
       }),
       listReviews: tool({
-        description: "List existing reviews, most recent first.",
-        inputSchema: z.object({ limit: z.number().int().min(1).max(50).default(20) }),
-        execute: async ({ limit }) => {
-          const rows = await reviewRepository.listReviews(limit)
-          return rows.map(({ id, title, year, rating, watched_on }) => ({
-            id, title, year, rating, watched_on,
-          }))
-        },
+        description: "Read current saved reviews and exact catalog counts. Omit limit for ALL reviews. Use limit only for an explicitly requested latest-N subset. The UI renders the result directly.",
+        inputSchema: z.object({ limit: z.number().int().min(1).max(500).optional() }),
+        execute: ({ limit }) => reviewRepository.listReviewCatalog(limit),
       }),
       requestDeleteReview: tool({
         description: "Prepare a short-lived confirmation phrase for deleting a review. Show the full phrase to the user and wait for their next message.",
@@ -211,6 +255,7 @@ After a tool result, clearly report created reviews, skipped duplicates, and pos
   })
 
   return createUIMessageStreamResponse({
-    stream: toUIMessageStream({ stream: result.stream }),
+    headers: { "Cache-Control": "no-store" },
+    stream: toUIMessageStream({ stream: result.stream, sendReasoning: false, onError: () => "The chat request failed. Please retry." }),
   })
 }
